@@ -1,0 +1,84 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,700;1,9..40,400&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,600;0,9..144,700;1,9..144,400&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * { box-sizing: border-box; }
+  body {
+    background: #0a0a0f;
+    color: #e8e6f0;
+    font-family: 'DM Sans', sans-serif;
+  }
+  ::-webkit-scrollbar       { width: 4px; }
+  ::-webkit-scrollbar-track { background: #0a0a0f; }
+  ::-webkit-scrollbar-thumb { background: #1e1c2a; border-radius: 2px; }
+}
+
+@layer components {
+  /* ── Buttons ── */
+  .btn-primary {
+    @apply bg-accent text-ink font-bold text-xs tracking-widest uppercase
+           px-5 py-2.5 rounded-md transition-all cursor-pointer border-0
+           hover:brightness-110 hover:-translate-y-px font-body;
+  }
+  .btn-ghost {
+    @apply bg-transparent border border-border text-muted px-4 py-2
+           rounded-md text-xs font-medium cursor-pointer transition-all
+           hover:border-accent hover:text-accent font-body;
+  }
+  .btn-danger {
+    @apply bg-red-900/20 border border-red-500/30 text-red-400 px-3 py-1.5
+           rounded-md text-xs cursor-pointer transition-all font-body
+           hover:bg-red-900/40;
+  }
+
+  /* ── Cards ── */
+  .blog-card {
+    @apply bg-surface border border-border rounded-xl overflow-hidden
+           transition-all duration-300 cursor-pointer
+           hover:border-accent/30 hover:-translate-y-1
+           hover:shadow-2xl hover:shadow-black/50;
+  }
+  .admin-card {
+    @apply bg-surface border border-border rounded-xl;
+  }
+
+  /* ── Form inputs ── */
+  .input-field {
+    @apply w-full bg-surface2 border border-border text-white rounded-lg
+           px-3 py-2.5 text-sm font-body outline-none transition-colors
+           focus:border-accent placeholder:text-muted;
+  }
+
+  /* ── Misc ── */
+  .tag-chip {
+    @apply inline-block px-2.5 py-0.5 rounded-full text-[0.6rem] font-semibold
+           tracking-widest uppercase border border-border text-muted cursor-pointer
+           transition-all hover:border-accent hover:text-accent;
+  }
+  .sb-title {
+    @apply text-[0.62rem] font-bold tracking-[0.15em] uppercase text-accent
+           mb-3 pb-2 border-b border-border;
+  }
+  .pill-pub {
+    @apply inline-block px-2.5 py-0.5 rounded-full text-[0.62rem] font-bold
+           bg-emerald-500/10 text-emerald-400 border border-emerald-500/20;
+  }
+  .pill-feat {
+    @apply inline-block px-2.5 py-0.5 rounded-full text-[0.62rem] font-bold
+           bg-accent/10 text-accent border border-accent/20;
+  }
+
+  /* ── Admin nav ── */
+  .anav {
+    @apply flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-[0.82rem]
+           font-medium text-muted transition-all hover:bg-surface2 hover:text-white
+           w-full text-left border-0 bg-transparent cursor-pointer font-body;
+  }
+  .anav.active {
+    @apply bg-accent/10 text-accent;
+    border: 1px solid rgba(212, 175, 55, 0.15);
+  }
+}
