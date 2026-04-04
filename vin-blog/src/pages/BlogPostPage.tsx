@@ -150,7 +150,7 @@ export default function BlogPostPage({ blogId }: Props): JSX.Element {
           </div>
 
           {/* Social Share */}
-          <SocialShare title={blog.title} />
+          <SocialShare title={blog.title} blogId={blog.id} description={blog.description} image={blog.image} />
 
           {/* Comments */}
           <div className="mt-14 pt-10 border-t-2 border-border">

@@ -7,7 +7,7 @@ const SKILLS = [
 ];
 
 const TIMELINE = [
-  { year: '2025', title: 'Founded ByteScribe', desc: 'Launched this platform to bridge the gap between medicine and technology through quality long-form content.' },
+  { year: '2025', title: 'Founded SkyLimits', desc: 'Launched this platform to bridge the gap between medicine and technology through quality long-form content.' },
   { year: '2024', title: 'Fellowship in Gynaecologic Oncology', desc: 'Advanced clinical training in gynaecologic cancers, surgical oncology, and cancer research.' },
   { year: '2022', title: 'Medical Degree (MBBS)', desc: 'Graduated with honours, developing a deep passion for women\'s health and evidence-based medicine.' },
   { year: '2021', title: 'First Code Commit', desc: 'Discovered programming during the pandemic and never looked back. Built first full-stack application.' },
@@ -59,7 +59,7 @@ export default function AboutPage(): JSX.Element {
           </h1>
           <p className="text-muted text-base leading-relaxed mb-6 max-w-xl mx-auto lg:mx-0">
             I am a medical doctor with a specialisation in Gynaecologic Oncology and a self-taught full-stack developer.
-            Skylimits is my attempt to make evidence-based medical knowledge more accessible, to explore the intersection
+            SkyLimits is my attempt to make evidence-based medical knowledge more accessible, to explore the intersection
             of healthcare and technology, and to share insights from standing at the crossroads of two extraordinary fields.
           </p>
           <div className="flex gap-3 justify-center lg:justify-start flex-wrap">
@@ -104,7 +104,7 @@ export default function AboutPage(): JSX.Element {
             </p>
             <p>
               Today I work at the intersection of these two worlds — seeing patients, conducting research, building software, and writing
-              about all of it. Skylimits is my way of sharing the knowledge I have accumulated and the questions I am still wrestling with.
+              about all of it. SkyLimits is my way of sharing the knowledge I have accumulated and the questions I am still wrestling with.
             </p>
           </div>
         </div>
@@ -208,10 +208,10 @@ export default function AboutPage(): JSX.Element {
             Send a Message →
           </button>
           <a
-            href="mailto:chukwudivincent79@gmail.com"
+            href="mailto:dr.vincent@skylimits.dev"
             className="btn-ghost px-6 py-2.5"
           >
-            dr.vincent@bytescribe.dev
+            dr.vincent@skylimits.dev
           </a>
         </div>
       </div>

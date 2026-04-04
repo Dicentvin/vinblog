@@ -100,7 +100,7 @@ export interface SubscribeResponse {
 
 // ─── UI Types ─────────────────────────────────────────────────────────────────
 
-export type PublicPage = 'home' | 'blogs' | 'blog';
+export type PublicPage = 'home' | 'blogs' | 'blog' | 'about' | 'contact';
 export type AdminPage  = 'dashboard' | 'blogs' | 'create' | 'comments';
 
 export interface BlogsFilter {

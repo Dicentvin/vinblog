@@ -21,7 +21,7 @@ export default function App(): JSX.Element {
   const currentBlogId = useAppSelector(selectCurrentBlogId);
 
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(
-    () => sessionStorage.getItem('bytescribe_admin') === 'true'
+    () => sessionStorage.getItem('skylimits_admin') === 'true'
   );
 
   // ── Admin section ─────────────────────────────────────────────────────────

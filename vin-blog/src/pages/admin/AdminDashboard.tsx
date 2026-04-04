@@ -1,7 +1,7 @@
 import { useGetAdminStatsQuery, useGetBlogsQuery } from '../../store/apiSlice';
 import { useNav } from '../../hooks';
 
-const CATS=[{id:'Frontend',color:'#6366f1'},{id:'Backend',color:'#10b981'},{id:'Database',color:'#f59e0b'},{id:'Design',color:'#ec4899'},{id:'DevOps',color:'#3b82f6'},{id:'AI & ML',color:'#8b5cf6'}];
+const CATS=[{id:'Fullstack',color:'#6366f1'},{id:'Politics',color:'#10b981'},{id:'Gynaecologic Oncology',color:'#f59e0b'},{id:'Self Development',color:'#ec4899'},{id:'Data Analysis',color:'#3b82f6'},{id:'Business',color:'#14b8a6'},{id:'Female Reproductive Health',color:'#e879f9'},{id:'AI & ML',color:'#8b5cf6'}];
 const fd=(d:string)=>new Date(d).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
 
 export default function AdminDashboard():JSX.Element{

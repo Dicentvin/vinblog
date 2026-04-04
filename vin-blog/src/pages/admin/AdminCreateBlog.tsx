@@ -4,7 +4,7 @@ import { useNav, useAppSelector } from '../../hooks';
 import { selectEditBlogId } from '../../store/uiSlice';
 import type { ContentBlock, CreateBlogPayload, SeoResult } from '../../types';
 
-const CATS=['Fullstack','politics','gynaecologic oncology','female Reductive','Data analysis','AI & ML', 'Business', 'self-development'] as const;
+const CATS=['Fullstack','Politics','Gynaecologic Oncology','Self Development','Data Analysis','Business','Female Reproductive Health','AI & ML'] as const;
 type BCat=(typeof CATS)[number];
 interface AiModal{type:string;result:string;}
 

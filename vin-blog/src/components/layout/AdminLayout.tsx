@@ -40,9 +40,9 @@ export default function AdminLayout({ children, onLogout }: Props): JSX.Element 
         </button>
         <div className="flex items-center gap-2">
           <div className="w-6 h-6 bg-accent rounded flex items-center justify-center flex-shrink-0">
-            <span className="font-display font-bold text-ink text-[0.72rem]">B</span>
+            <span className="font-display font-bold text-ink text-[0.72rem]">S</span>
           </div>
-          <span className="font-display font-bold text-sm text-[#e8e6f0]">ByteScribe</span>
+          <span className="font-display font-bold text-sm text-[#e8e6f0]">SkyLimits</span>
           <span className="text-[0.55rem] text-muted bg-surface2 px-1.5 py-0.5 rounded-full border border-border">Admin</span>
         </div>
         <button onClick={() => { exitAdmin(); }} className="btn-ghost text-xs px-2.5 py-1.5 flex-shrink-0">
@@ -81,10 +81,10 @@ export default function AdminLayout({ children, onLogout }: Props): JSX.Element 
             className="flex items-center gap-2.5 bg-transparent border-0 cursor-pointer p-0 min-w-0"
           >
             <div className="w-7 h-7 bg-accent rounded flex items-center justify-center flex-shrink-0">
-              <span className="font-display font-bold text-ink text-[0.82rem]">B</span>
+              <span className="font-display font-bold text-ink text-[0.82rem]">S</span>
             </div>
             <div className="min-w-0">
-              <div className="font-display font-bold text-[0.93rem] text-[#e8e6f0] truncate">Skylimit</div>
+              <div className="font-display font-bold text-[0.93rem] text-[#e8e6f0] truncate">SkyLimits</div>
               <div className="text-[0.54rem] text-muted uppercase tracking-widest">Admin Panel</div>
             </div>
           </button>

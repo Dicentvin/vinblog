@@ -1,20 +1,11 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import type {
-  Blog,
-  BlogsResponse,
-  Comment,
-  AdminStats,
-  AiAssistRequest,
-  AiAssistResponse,
-  AiPollResponse,
-  UploadResponse,
-  SubscribeResponse,
-  CreateBlogPayload,
+  Blog, BlogsResponse, Comment, AdminStats,
+  AiAssistRequest, AiAssistResponse, AiPollResponse,
+  UploadResponse, SubscribeResponse, CreateBlogPayload,
 } from '../types';
 
 const BASE_URL = import.meta.env.VITE_API_URL ?? '';
-
-// ── Argument interfaces ───────────────────────────────────────────────────────
 
 export interface GetBlogsArgs {
   search?:   string;
@@ -25,39 +16,29 @@ export interface GetBlogsArgs {
 }
 
 export interface AddCommentArgs {
-  blogId:   string;
-  author:   string;
-  content:  string;
-}
-
-export interface AdminLoginArgs {
-  username: string;
-  password: string;
-}
-
-export interface AdminLoginResponse {
-  success: boolean;
-  message: string;
+  blogId:  string;
+  author:  string;
+  content: string;
 }
 
 export interface UpdateBlogArgs {
   id:           string;
   title?:       string;
   description?: string;
+  category?:    string;
+  tags?:        string[];
+  minsRead?:    number;
+  status?:      string;
+  featured?:    boolean;
   image?:       string;
   imageFileId?: string;
   content?:     string;
-  category?:    string;
-  tags?:        string[];
-  authorName?:  string;
-  authorImage?: string;
-  authorBio?:   string;
-  minsRead?:    number;
-  featured?:    boolean;
-  status?:      'draft' | 'published';
 }
 
-// ── API slice ─────────────────────────────────────────────────────────────────
+export interface AdminLoginArgs {
+  username: string;
+  password: string;
+}
 
 export const api = createApi({
   reducerPath: 'api',
@@ -66,17 +47,11 @@ export const api = createApi({
 
   endpoints: (builder) => ({
 
-    // ── Blogs ─────────────────────────────────────────────────────────────────
+    // ── Blogs ──────────────────────────────────────────────────────────────────
 
     getBlogs: builder.query<BlogsResponse, GetBlogsArgs>({
       query: (args: GetBlogsArgs = {}) => {
-        const {
-          search   = '',
-          category = '',
-          page     = 1,
-          limit    = 8,
-          sort     = 'newest',
-        } = args;
+        const { search = '', category = '', page = 1, limit = 8, sort = 'newest' } = args;
         const p = new URLSearchParams();
         if (search)   p.set('search',   search);
         if (category) p.set('category', category);
@@ -88,10 +63,7 @@ export const api = createApi({
       providesTags: (result) =>
         result
           ? [
-              ...result.data.map(({ id }) => ({
-                type: 'Blog' as const,
-                id,
-              })),
+              ...result.data.map(({ id }) => ({ type: 'Blog' as const, id })),
               { type: 'Blog' as const, id: 'LIST' },
             ]
           : [{ type: 'Blog' as const, id: 'LIST' }],
@@ -99,66 +71,41 @@ export const api = createApi({
 
     getBlogById: builder.query<Blog, string>({
       query:        (id: string) => `/api/blogs/${id}`,
-      providesTags: (_result, _error, id) => [{ type: 'Blog' as const, id }],
+      providesTags: (_r, _e, id) => [{ type: 'Blog' as const, id }],
     }),
 
     createBlog: builder.mutation<Blog, CreateBlogPayload>({
-      query: (body: CreateBlogPayload) => ({
-        url:    '/api/blogs',
-        method: 'POST',
-        body,
-      }),
-      invalidatesTags: [
-        { type: 'Blog' as const, id: 'LIST' },
-        'Stats',
-      ],
+      query:           (body: CreateBlogPayload) => ({ url: '/api/blogs', method: 'POST', body }),
+      invalidatesTags: [{ type: 'Blog' as const, id: 'LIST' }, 'Stats'],
     }),
 
-    // Uses UpdateBlogArgs — a clean named interface with optional fields
+    // updateBlog uses a dedicated interface — no inline destructuring
     updateBlog: builder.mutation<Blog, UpdateBlogArgs>({
       query: (args: UpdateBlogArgs) => {
         const { id, ...body } = args;
-        return {
-          url:    `/api/blogs/${id}`,
-          method: 'PATCH',
-          body,
-        };
+        return { url: `/api/blogs/${id}`, method: 'PATCH', body };
       },
-      invalidatesTags: (_result, _error, arg) => [
-        { type: 'Blog' as const, id: arg.id },
+      invalidatesTags: (_r, _e, args) => [
+        { type: 'Blog' as const, id: args.id },
         { type: 'Blog' as const, id: 'LIST' },
       ],
     }),
 
     deleteBlog: builder.mutation<{ success: boolean }, string>({
-      query: (id: string) => ({
-        url:    `/api/blogs/${id}`,
-        method: 'DELETE',
-      }),
-      invalidatesTags: [
-        { type: 'Blog' as const, id: 'LIST' },
-        'Stats',
-      ],
+      query:           (id: string) => ({ url: `/api/blogs/${id}`, method: 'DELETE' }),
+      invalidatesTags: [{ type: 'Blog' as const, id: 'LIST' }, 'Stats'],
     }),
 
     likeBlog: builder.mutation<{ success: boolean }, string>({
-      query: (id: string) => ({
-        url:    `/api/blogs/${id}/like`,
-        method: 'POST',
-      }),
-      invalidatesTags: (_result, _error, id) => [
-        { type: 'Blog' as const, id },
-      ],
+      query:           (id: string) => ({ url: `/api/blogs/${id}/like`, method: 'POST' }),
+      invalidatesTags: (_r, _e, id) => [{ type: 'Blog' as const, id }],
     }),
 
     trackView: builder.mutation<{ success: boolean }, string>({
-      query: (id: string) => ({
-        url:    `/api/blogs/${id}/view`,
-        method: 'POST',
-      }),
+      query: (id: string) => ({ url: `/api/blogs/${id}/view`, method: 'POST' }),
     }),
 
-    // ── Comments ──────────────────────────────────────────────────────────────
+    // ── Comments ───────────────────────────────────────────────────────────────
 
     getAllComments: builder.query<Comment[], void>({
       query:        () => '/api/comments',
@@ -171,32 +118,23 @@ export const api = createApi({
         method: 'POST',
         body:   { author: args.author, content: args.content },
       }),
-      invalidatesTags: (_result, _error, arg) => [
-        { type: 'Blog' as const, id: arg.blogId },
+      invalidatesTags: (_r, _e, args) => [
+        { type: 'Blog' as const, id: args.blogId },
         'Comment',
       ],
     }),
 
     deleteComment: builder.mutation<{ success: boolean }, string>({
-      query: (id: string) => ({
-        url:    `/api/comments/${id}`,
-        method: 'DELETE',
-      }),
-      invalidatesTags: [
-        'Comment',
-        { type: 'Blog' as const, id: 'LIST' },
-      ],
+      query:           (id: string) => ({ url: `/api/comments/${id}`, method: 'DELETE' }),
+      invalidatesTags: ['Comment', { type: 'Blog' as const, id: 'LIST' }],
     }),
 
     likeComment: builder.mutation<{ success: boolean }, string>({
-      query: (id: string) => ({
-        url:    `/api/comments/${id}/like`,
-        method: 'POST',
-      }),
+      query:           (id: string) => ({ url: `/api/comments/${id}/like`, method: 'POST' }),
       invalidatesTags: ['Comment'],
     }),
 
-    // ── Newsletter ────────────────────────────────────────────────────────────
+    // ── Newsletter ─────────────────────────────────────────────────────────────
 
     subscribe: builder.mutation<SubscribeResponse, string>({
       query: (email: string) => ({
@@ -206,7 +144,7 @@ export const api = createApi({
       }),
     }),
 
-    // ── Image Upload (ImageKit) ───────────────────────────────────────────────
+    // ── Image Upload ───────────────────────────────────────────────────────────
 
     uploadImage: builder.mutation<UploadResponse, FormData>({
       query: (formData: FormData) => ({
@@ -216,14 +154,10 @@ export const api = createApi({
       }),
     }),
 
-    // ── AI Assistant (Gemini via Inngest) ─────────────────────────────────────
+    // ── AI (Gemini via Inngest) ────────────────────────────────────────────────
 
     aiAssist: builder.mutation<AiAssistResponse, AiAssistRequest>({
-      query: (body: AiAssistRequest) => ({
-        url:    '/api/ai/assist',
-        method: 'POST',
-        body,
-      }),
+      query:           (body: AiAssistRequest) => ({ url: '/api/ai/assist', method: 'POST', body }),
       invalidatesTags: ['AiResult'],
     }),
 
@@ -232,16 +166,16 @@ export const api = createApi({
       providesTags: ['AiResult'],
     }),
 
-    // ── Admin Stats ───────────────────────────────────────────────────────────
+    // ── Admin Stats ────────────────────────────────────────────────────────────
 
     getAdminStats: builder.query<AdminStats, void>({
       query:        () => '/api/admin/stats',
       providesTags: ['Stats'],
     }),
 
-    // ── Admin Login ───────────────────────────────────────────────────────────
+    // ── Admin Login ────────────────────────────────────────────────────────────
 
-    adminLogin: builder.mutation<AdminLoginResponse, AdminLoginArgs>({
+    adminLogin: builder.mutation<{ success: boolean; message: string }, AdminLoginArgs>({
       query: (body: AdminLoginArgs) => ({
         url:    '/api/admin/login',
         method: 'POST',
@@ -251,8 +185,6 @@ export const api = createApi({
 
   }),
 });
-
-// ── Exported hooks ────────────────────────────────────────────────────────────
 
 export const {
   useGetBlogsQuery,

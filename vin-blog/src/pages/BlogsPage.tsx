@@ -4,14 +4,16 @@ import type { Blog } from '../types';
 
 const CATS = [
   { id:'all',name:'All Topics',color:'#d4af37'},
-  { id:'Frontend',name:'Frontend',color:'#6366f1'},
-  { id:'Backend',name:'Backend',color:'#10b981'},
-  { id:'Database',name:'Database',color:'#f59e0b'},
-  { id:'Design',name:'Design',color:'#ec4899'},
-  { id:'DevOps',name:'DevOps',color:'#3b82f6'},
+  { id:'Fullstack',name:'Fullstack',color:'#6366f1'},
+  { id:'Politics',name:'Politics',color:'#10b981'},
+  { id:'Gynaecologic Oncology',name:'Gynae Oncology',color:'#f59e0b'},
+  { id:'Self Development',name:'Self Development',color:'#ec4899'},
+  { id:'Data Analysis',name:'Data Analysis',color:'#3b82f6'},
+  { id:'Business',name:'Business',color:'#14b8a6'},
+  { id:'Female Reproductive Health',name:'Female Health',color:'#e879f9'},
   { id:'AI & ML',name:'AI & ML',color:'#8b5cf6'},
 ];
-const TAGS=['Node.js','React','TypeScript','PostgreSQL','CSS','Tailwind','API','Docker','GraphQL','Redis','SSR','Animation'];
+const TAGS=['Fullstack','Politics','Oncology','Self Development','Data Analysis','Business','Female Health','AI & ML','Research','Medicine','Health','Tech'];
 const PER=8;
 const fd=(d:string)=>new Date(d).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
 function pgNums(cur:number,tot:number):(number|'…')[]{

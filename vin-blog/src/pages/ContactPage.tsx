@@ -3,13 +3,12 @@ import { useSubscribeMutation } from '../store/apiSlice';
 
 // ── Your real contact details ─────────────────────────────────────────────────
 const CONTACT = {
-  email:    'chukwudivincent79@gmail.com',
-  phone:    '+234 8121111668',
-  whatsapp: 'https://wa.me/2348121111668',
+  email:    'dr.vincent@skylimits.dev',
+  phone:    '+234 801 234 5678',
+  whatsapp: 'https://wa.me/2348012345678',
   twitter:  'https://twitter.com/drvincent',
-  linkedin: 'https://www.linkedin.com/in/chukwudi-vincent-1a1a22349/',
+  linkedin: 'https://linkedin.com/in/drvincent',
   instagram:'https://instagram.com/drvincent',
-  facebook:'https://web.facebook.com/vincent.angelicman.chukwudi',
   location: 'Nigeria 🇳🇬',
 };
 
@@ -270,7 +269,6 @@ export default function ContactPage(): JSX.Element {
                 { platform: 'Twitter / X',  href: CONTACT.twitter,   icon: '𝕏',  color: 'text-sky-400',     bg: 'bg-sky-900/20 border-sky-500/30' },
                 { platform: 'LinkedIn',     href: CONTACT.linkedin,  icon: 'in', color: 'text-blue-400',    bg: 'bg-blue-900/20 border-blue-500/30' },
                 { platform: 'Instagram',    href: CONTACT.instagram, icon: '📷', color: 'text-pink-400',    bg: 'bg-pink-900/20 border-pink-500/30' },
-                { platform: 'facebook',    href: CONTACT.facebook, icon: '📷', color: 'text-pink-400',    bg: 'bg-pink-900/20 border-pink-500/30' },
               ].map(s => (
                 <a
                   key={s.platform}

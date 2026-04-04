@@ -35,7 +35,7 @@ export default function BlogLayout({ children }: Props): JSX.Element {
               <span className="font-display font-bold text-ink text-sm">S</span>
             </div>
             <span className="font-display font-bold text-lg text-[#e8e6f0] tracking-tight hidden sm:block">
-              Skylimits
+              SkyLimits
             </span>
           </button>
 
@@ -131,7 +131,7 @@ export default function BlogLayout({ children }: Props): JSX.Element {
                 <div className="w-8 h-8 bg-accent rounded-md flex items-center justify-center">
                   <span className="font-display font-bold text-ink text-sm">S</span>
                 </div>
-                <span className="font-display font-bold text-lg text-[#e8e6f0]">Skylimits</span>
+                <span className="font-display font-bold text-lg text-[#e8e6f0]">SkyLimits</span>
               </div>
               <p className="text-muted text-sm leading-relaxed max-w-xs">
                 A medical doctor's perspective on technology, health, and the world. Evidence-based insights for curious minds.
@@ -177,11 +177,11 @@ export default function BlogLayout({ children }: Props): JSX.Element {
             <div>
               <h4 className="text-xs font-bold tracking-widest uppercase text-white mb-3">Contact</h4>
               <div className="space-y-2">
-                <a href="mailto:chukwudivincent79@gmail.com" className="block text-sm text-muted hover:text-accent transition-colors">
-                  dr.vincent@Skylimits.dev
+                <a href="mailto:dr.vincent@skylimits.dev" className="block text-sm text-muted hover:text-accent transition-colors">
+                  dr.vincent@skylimits.dev
                 </a>
-                <a href="tel:+2348121111668" className="block text-sm text-muted hover:text-accent transition-colors">
-                  +234 8121111668
+                <a href="tel:+2348012345678" className="block text-sm text-muted hover:text-accent transition-colors">
+                  +234 801 234 5678
                 </a>
                 <button
                   onClick={() => navigate('contact')}
@@ -194,7 +194,7 @@ export default function BlogLayout({ children }: Props): JSX.Element {
           </div>
 
           <div className="border-t border-border pt-6 flex flex-col sm:flex-row justify-between items-center gap-3">
-            <p className="text-muted text-xs">© 2025 Skylimits · Dr. Vincent. All rights reserved.</p>
+            <p className="text-muted text-xs">© 2025 SkyLimits · Dr. Vincent. All rights reserved.</p>
             <div className="flex gap-4">
               {['Privacy Policy', 'Terms', 'RSS'].map(l => (
                 <button key={l} className="text-muted text-xs hover:text-accent transition-colors bg-transparent border-0 cursor-pointer font-body">
