@@ -3,7 +3,7 @@ import { db } from './src/db/index.js';
 import { blogs } from './src/db/schema.js';
 import { v4 as uuid } from 'uuid';
 
-const AUTHOR_IMAGE = '/authorimg.png';
+const AUTHOR_IMAGE = 'https://vinblog-3m6f.vercel.app/authorimg.png';
 const AUTHOR_NAME  = 'Dr. Vincent';
 const AUTHOR_BIO   = 'Medical Doctor, Gynaecologic Oncologist & Full-Stack Developer';
 
