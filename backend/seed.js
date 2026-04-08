@@ -4,7 +4,7 @@ import { blogs, comments, newsletters } from './src/db/schema.js';
 import { v4 as uuid } from 'uuid';
 
 // Author image — update this path after deploying your image or use a hosted URL
-const AUTHOR_IMAGE = '/authorimg.png';
+const AUTHOR_IMAGE = 'https://vinblog-3m6f.vercel.app/authorimg.png';
 const AUTHOR_NAME  = 'Dr. Vincent';
 const AUTHOR_BIO   = 'Medical Doctor, Tech Enthusiast & Full-Stack Developer';
 
