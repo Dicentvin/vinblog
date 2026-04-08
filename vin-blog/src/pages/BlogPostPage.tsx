@@ -1,5 +1,12 @@
 import { useState, useEffect, type FormEvent } from 'react';
-import { useGetBlogByIdQuery, useLikeBlogMutation, useAddCommentMutation, useSubscribeMutation, useTrackViewMutation } from '../store/apiSlice';
+import { 
+  useGetBlogByIdQuery, 
+  useGetBlogsQuery, 
+  useLikeBlogMutation, 
+  useAddCommentMutation, 
+  useSubscribeMutation, 
+  useTrackViewMutation 
+} from '../store/apiSlice';
 import { useNav } from '../hooks';
 import type { Comment } from '../types';
 import SocialShare from '../components/SocialShare';
@@ -24,6 +31,10 @@ const sampleContent = (cat: string) => `
 export default function BlogPostPage({ blogId }: Props): JSX.Element {
   const { navigate }  = useNav();
   const { data: blog, isLoading, isError } = useGetBlogByIdQuery(blogId, { skip: !blogId });
+  
+  // Fetch all blogs
+  const { data: allBlogs } = useGetBlogsQuery(undefined, { skip: !blog });
+
   const [likeBlog]    = useLikeBlogMutation();
   const [addComment]  = useAddCommentMutation();
   const [subscribe]   = useSubscribeMutation();
@@ -83,8 +94,22 @@ export default function BlogPostPage({ blogId }: Props): JSX.Element {
   const comments: Comment[] = [...(blog.comments ?? []), ...localCmts];
   const likeCount = (blog.likes ?? 0) + (liked ? 1 : 0);
 
+  // Safely extract the array regardless of how the API response is structured
+  const blogsList = Array.isArray(allBlogs) 
+    ? allBlogs 
+    : Array.isArray(allBlogs?.blogs) 
+      ? allBlogs.blogs 
+      : Array.isArray(allBlogs?.data) 
+        ? allBlogs.data 
+        : [];
+
+  // Filter the safe array
+  const relatedArticles = blogsList
+    .filter((b: any) => b.category === blog.category && b.id !== blog.id)
+    .slice(0, 2);
+
   return (
-    <main className="max-w-[1400px] mx-auto px-4 sm:px-6 py-8">
+    <main className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-12 py-8">
       <div className="flex flex-col xl:flex-row gap-8 xl:gap-10 items-start">
         {/* Action bar */}
         <div className="xl:w-14 xl:flex-shrink-0 xl:sticky xl:top-24 self-start">
@@ -181,7 +206,7 @@ export default function BlogPostPage({ blogId }: Props): JSX.Element {
             </div>
           </div>
 
-          {/* Related */}
+          {/* Related Articles Array Mapping */}
           <div className="mt-14">
             <div className="flex items-center gap-4 mb-6">
               <div className="flex-1 h-px bg-border"/>
@@ -191,7 +216,44 @@ export default function BlogPostPage({ blogId }: Props): JSX.Element {
               </div>
               <div className="flex-1 h-px bg-border"/>
             </div>
-            <p className="text-center text-muted text-sm">Explore more in <button onClick={()=>navigate('blogs')} className="text-accent underline bg-transparent border-0 cursor-pointer font-body text-sm">the full collection →</button></p>
+            
+            {relatedArticles.length > 0 ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
+                {relatedArticles.map((related: any) => (
+                  <div 
+                    key={related.id} 
+                    className="bg-surface border border-border rounded-xl overflow-hidden cursor-pointer hover:border-accent transition-colors group flex flex-col"
+                    onClick={() => navigate(related.id)} 
+                  >
+                    <div className="h-40 overflow-hidden shrink-0">
+                      <img 
+                        src={related.image} 
+                        alt={related.title} 
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
+                      />
+                    </div>
+                    <div className="p-5 flex-1 flex flex-col">
+                      <span className="text-[0.65rem] font-bold uppercase tracking-wider text-accent2">{related.category}</span>
+                      <h3 className="font-display font-bold text-white text-lg mt-1.5 mb-2 line-clamp-2 leading-tight">
+                        {related.title}
+                      </h3>
+                      <div className="mt-auto flex items-center gap-2 text-xs text-muted pt-4">
+                        <img src={related.author.image} alt="" className="w-5 h-5 rounded-full" />
+                        <span>{related.author.name}</span>
+                        <span className="text-border">•</span>
+                        <span>{fd(related.publishedAt)}</span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-center text-muted text-sm mb-6">No related articles found.</p>
+            )}
+
+            <p className="text-center text-muted text-sm">
+              Explore more in <button onClick={()=>navigate('blogs')} className="text-accent underline bg-transparent border-0 cursor-pointer font-body text-sm hover:text-white transition-colors">the full collection →</button>
+            </p>
           </div>
         </article>
 
