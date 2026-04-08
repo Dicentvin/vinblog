@@ -1,3 +1,4 @@
+/// <reference types="vite/client" />
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import type {
   Blog, BlogsResponse, Comment, AdminStats,

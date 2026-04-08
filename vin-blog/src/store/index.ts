@@ -1,3 +1,4 @@
+/// <reference types="vite/client" />
 import { configureStore } from '@reduxjs/toolkit';
 import { api } from './apiSlice';
 import uiReducer from './uiSlice';
