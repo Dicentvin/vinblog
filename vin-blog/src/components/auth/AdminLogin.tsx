@@ -2,8 +2,9 @@ import { useState, type FormEvent } from 'react';
 
 interface Props { onSuccess: () => void; }
 
-const ADMIN_USERNAME = 'admin';
-const ADMIN_PASSWORD = 'skylimits2025';
+const ADMIN_USERNAME = import.meta.env.ADMIN_USERNAME ?? 'vincent';
+const ADMIN_PASSWORD = import.meta.env.ADMIN_PASSWORD ?? 'Centvin@213';
+
 
 export default function AdminLogin({ onSuccess }: Props): JSX.Element {
   const [username, setUsername] = useState('');
@@ -18,7 +19,7 @@ export default function AdminLogin({ onSuccess }: Props): JSX.Element {
     setLoading(true);
     await new Promise(r => setTimeout(r, 600));
     if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
-      sessionStorage.setItem('skylimits_admin', 'true');
+      localStorage.setItem('skylimits_admin', 'true');
       onSuccess();
     } else {
       setError('Invalid username or password.');
