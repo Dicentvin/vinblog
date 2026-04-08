@@ -33,7 +33,7 @@ export default function AboutPage(): JSX.Element {
         <div className="flex-shrink-0 relative">
           <div className="w-52 h-52 sm:w-64 sm:h-64 rounded-2xl overflow-hidden border-2 border-accent/30 shadow-2xl shadow-black/40">
             <img
-              src="/src/images/authorimg.png"
+              src="/authorimg.png"
               alt="Dr. Vincent"
               className="w-full h-full object-cover"
             />

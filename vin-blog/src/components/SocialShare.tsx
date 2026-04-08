@@ -150,7 +150,7 @@ export default function SocialShare({ title, blogId, description, image }: Props
 
       <div className="mt-6 flex flex-col sm:flex-row items-center gap-4 bg-surface border border-border rounded-xl p-4">
         <img
-          src="/src/images/authorimg.png"
+          src="/authorimg.png"
           alt="Dr. Vincent"
           className="w-12 h-12 rounded-full border-2 border-accent flex-shrink-0"
         />
