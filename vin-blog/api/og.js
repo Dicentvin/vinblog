@@ -3,7 +3,7 @@
  *
  * Social media crawlers (Twitter, Facebook, WhatsApp, LinkedIn) fetch this
  * endpoint to get Open Graph meta tags with the blog image + description.
- * Regular users are redirected to the SPA.
+ * Regular users are redirected to the SPA at the correct blog post URL.
  */
 
 const SITE_URL = process.env.VERCEL_URL
@@ -42,12 +42,12 @@ function truncate(str = '', max = 200) {
 }
 
 function buildHtml({ title, description, image, canonicalUrl, redirectUrl, siteName = 'SkyLimits' }) {
-  const safeTitle    = escapeHtml(title);
-  const safeDesc     = escapeHtml(truncate(description, 200));
-  const safeImage    = escapeHtml(image);
+  const safeTitle     = escapeHtml(title);
+  const safeDesc      = escapeHtml(truncate(description, 200));
+  const safeImage     = escapeHtml(image);
   const safeCanonical = escapeHtml(canonicalUrl);
   const safeRedirect  = escapeHtml(redirectUrl);
-  const safeSite     = escapeHtml(siteName);
+  const safeSite      = escapeHtml(siteName);
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -74,7 +74,7 @@ function buildHtml({ title, description, image, canonicalUrl, redirectUrl, siteN
   <meta name="twitter:description" content="${safeDesc}" />
   <meta name="twitter:image"       content="${safeImage}" />
 
-  <!-- Redirect humans to the SPA -->
+  <!-- Redirect humans to the SPA at the correct blog post -->
   <meta http-equiv="refresh" content="0;url=${safeRedirect}" />
   <link rel="canonical" href="${safeCanonical}" />
 </head>
@@ -84,13 +84,13 @@ function buildHtml({ title, description, image, canonicalUrl, redirectUrl, siteN
 </html>`;
 }
 
-function buildFallbackHtml() {
+function buildFallbackHtml(redirectUrl) {
   return buildHtml({
     title:        'SkyLimits',
     description:  'Insights on Fullstack, AI & ML, Health, Politics and more — by Dr. Vincent.',
     image:        `${SITE_URL}/og-default.png`,
     canonicalUrl: SITE_URL,
-    redirectUrl:  SITE_URL,
+    redirectUrl:  redirectUrl || SITE_URL,
   });
 }
 
@@ -101,21 +101,20 @@ export default async function handler(req, res) {
   if (!id) {
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
     res.setHeader('Cache-Control', 'public, max-age=60');
-    return res.status(200).send(buildFallbackHtml());
+    return res.status(200).send(buildFallbackHtml(SITE_URL));
   }
 
-  // The URL a human lands on in the SPA: /?blog=BLOG_ID
-  const redirectUrl = `${SITE_URL}/?blog=${id}`;
+  // Hash URL format that the SPA router understands: /#blog/ID
+  const redirectUrl = `${SITE_URL}/#blog/${id}`;
 
-  // Non-crawlers: redirect straight to the SPA
+  // Non-crawlers: redirect straight to the correct blog post
   if (!isCrawler(userAgent)) {
     res.setHeader('Location', redirectUrl);
     return res.status(302).end();
   }
 
-  // Crawlers: fetch blog data from our own Vercel API route and return OG HTML
+  // Crawlers: fetch blog data from our own Vercel API and return OG HTML
   try {
-    // Use the internal API URL on Vercel, or fall back to SITE_URL in dev
     const apiBase = process.env.VERCEL_URL
       ? `https://${process.env.VERCEL_URL}`
       : SITE_URL;
@@ -124,8 +123,6 @@ export default async function handler(req, res) {
     if (!apiRes.ok) throw new Error(`API responded with ${apiRes.status}`);
 
     const blog = await apiRes.json();
-
-    // Guard: if the API returned an error object instead of a blog
     if (!blog?.title) throw new Error('Blog data missing title');
 
     const html = buildHtml({
@@ -137,14 +134,12 @@ export default async function handler(req, res) {
     });
 
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
-    // Cache for 10 minutes; crawlers re-fetch infrequently
     res.setHeader('Cache-Control', 'public, s-maxage=600, stale-while-revalidate=60');
     return res.status(200).send(html);
   } catch (err) {
     console.error('[og.js] Failed to fetch blog:', err.message);
 
-    // Fallback: still serve OG HTML so the share doesn't look broken,
-    // but redirect the human to the right post URL
+    // Still redirect to the right post even if OG data fetch failed
     const fallback = buildHtml({
       title:        'SkyLimits',
       description:  'Insights on Fullstack, AI & ML, Health, Politics and more — by Dr. Vincent.',

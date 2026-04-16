@@ -1,13 +1,11 @@
 /**
  * router.ts — URL-based routing for SkyLimits
  *
- * Maps URL hash/params → app state, and app state → URL.
- * This fixes the "refresh goes to home page" problem entirely.
- *
  * URL scheme:
  *   /                       → home
  *   /#blogs                 → blogs page
  *   /#blog/{id}             → single blog post
+ *   /?blog={id}             → single blog post (social share links from og.js)
  *   /#about                 → about page
  *   /#contact               → contact page
  *   /#admin                 → admin panel (dashboard)
@@ -25,8 +23,20 @@ export interface RouteState {
   blogId:    string | null;
 }
 
-/** Read current URL hash and return the matching route state */
+/** Read current URL (hash + query params) and return the matching route state */
 export function parseRoute(): RouteState {
+  // ── Check ?blog=ID query param first (used by social share / og.js links) ──
+  const searchParams = new URLSearchParams(window.location.search);
+  const queryBlogId  = searchParams.get('blog');
+
+  if (queryBlogId) {
+    // Rewrite the URL to the canonical hash format so the address bar
+    // stays clean and refreshes keep working, without adding a history entry.
+    window.history.replaceState(null, '', `/#blog/${queryBlogId}`);
+    return { isAdmin: false, adminPage: 'dashboard', page: 'blog', blogId: queryBlogId };
+  }
+
+  // ── Hash-based routing ────────────────────────────────────────────────────
   const hash = window.location.hash.replace('#', '').toLowerCase();
 
   // Admin routes
@@ -39,7 +49,7 @@ export function parseRoute(): RouteState {
     return { isAdmin: true, adminPage, page: 'home', blogId: null };
   }
 
-  // Single blog
+  // Single blog post  /#blog/{id}
   if (hash.startsWith('blog/')) {
     const blogId = hash.replace('blog/', '');
     return { isAdmin: false, adminPage: 'dashboard', page: 'blog', blogId: blogId || null };
@@ -71,9 +81,9 @@ export function pushRoute(state: Partial<RouteState> & { page?: PublicPage; blog
     hash = state.page;
   }
 
-  const newHash = hash ? `#${hash}` : window.location.pathname;
+  const newHash = hash ? `#${hash}` : '/';
   if (window.location.hash !== `#${hash}`) {
-    window.history.pushState(null, '', newHash || '/');
+    window.history.pushState(null, '', newHash);
   }
 }
 
