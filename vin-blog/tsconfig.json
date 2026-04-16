@@ -16,6 +16,8 @@
     "noUnusedParameters": false,
     "baseUrl": "."
   },
+    "exclude": ["api"],
+
   "include": ["src"],
   "references": [{ "path": "./tsconfig.node.json" }]
 }

@@ -1,15 +1,15 @@
 /// <reference types="vite/client" />
 import { configureStore } from '@reduxjs/toolkit';
-import { api } from './apiSlice';
+import {apiSlice} from './apiSlice';
 import uiReducer from './uiSlice';
 
 export const store = configureStore({
   reducer: {
-    [api.reducerPath]: api.reducer,
+    [apiSlice.reducerPath]: apiSlice.reducer,
     ui: uiReducer,
   },
   middleware: (getDefaultMiddleware) =>
-    getDefaultMiddleware().concat(api.middleware),
+    getDefaultMiddleware().concat(apiSlice.middleware),
   devTools: import.meta.env.DEV,
 });
 
