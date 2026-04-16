@@ -6,7 +6,6 @@
  * Regular users are redirected to the SPA.
  */
 
-const BACKEND = process.env.VITE_API_URL || 'https://vinblog.onrender.com';
 const SITE_URL = process.env.VERCEL_URL
   ? `https://${process.env.VERCEL_URL}`
   : process.env.SITE_URL || 'https://skylimits.vercel.app';
@@ -42,12 +41,13 @@ function truncate(str = '', max = 200) {
   return str.slice(0, max - 1).trimEnd() + '…';
 }
 
-function buildHtml({ title, description, image, url, siteName = 'SkyLimits' }) {
-  const safeTitle = escapeHtml(title);
-  const safeDesc  = escapeHtml(truncate(description, 200));
-  const safeImage = escapeHtml(image);
-  const safeUrl   = escapeHtml(url);
-  const safeSite  = escapeHtml(siteName);
+function buildHtml({ title, description, image, canonicalUrl, redirectUrl, siteName = 'SkyLimits' }) {
+  const safeTitle    = escapeHtml(title);
+  const safeDesc     = escapeHtml(truncate(description, 200));
+  const safeImage    = escapeHtml(image);
+  const safeCanonical = escapeHtml(canonicalUrl);
+  const safeRedirect  = escapeHtml(redirectUrl);
+  const safeSite     = escapeHtml(siteName);
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -58,12 +58,12 @@ function buildHtml({ title, description, image, url, siteName = 'SkyLimits' }) {
   <meta name="description" content="${safeDesc}" />
 
   <!-- Open Graph (Facebook, WhatsApp, LinkedIn, Discord) -->
-  <meta property="og:type"        content="article" />
-  <meta property="og:site_name"   content="${safeSite}" />
-  <meta property="og:url"         content="${safeUrl}" />
-  <meta property="og:title"       content="${safeTitle}" />
-  <meta property="og:description" content="${safeDesc}" />
-  <meta property="og:image"       content="${safeImage}" />
+  <meta property="og:type"         content="article" />
+  <meta property="og:site_name"    content="${safeSite}" />
+  <meta property="og:url"          content="${safeCanonical}" />
+  <meta property="og:title"        content="${safeTitle}" />
+  <meta property="og:description"  content="${safeDesc}" />
+  <meta property="og:image"        content="${safeImage}" />
   <meta property="og:image:width"  content="1200" />
   <meta property="og:image:height" content="630" />
 
@@ -74,22 +74,23 @@ function buildHtml({ title, description, image, url, siteName = 'SkyLimits' }) {
   <meta name="twitter:description" content="${safeDesc}" />
   <meta name="twitter:image"       content="${safeImage}" />
 
-  <!-- Redirect humans to the SPA after a tiny delay -->
-  <meta http-equiv="refresh" content="0;url=${safeUrl.replace('/api/og?id=', '/?blog=').replace(/\?id=[^&]+/, '')}" />
-  <link rel="canonical" href="${safeUrl}" />
+  <!-- Redirect humans to the SPA -->
+  <meta http-equiv="refresh" content="0;url=${safeRedirect}" />
+  <link rel="canonical" href="${safeCanonical}" />
 </head>
 <body>
-  <p>Redirecting… <a href="${safeUrl}">Click here if not redirected.</a></p>
+  <p>Redirecting… <a href="${safeRedirect}">Click here if not redirected.</a></p>
 </body>
 </html>`;
 }
 
-function buildFallbackHtml(url) {
+function buildFallbackHtml() {
   return buildHtml({
-    title:       'SkyLimits',
-    description: 'Insights on Fullstack, AI & ML, Health, Politics and more — by Dr. Vincent.',
-    image:       `${SITE_URL}/og-default.png`,
-    url,
+    title:        'SkyLimits',
+    description:  'Insights on Fullstack, AI & ML, Health, Politics and more — by Dr. Vincent.',
+    image:        `${SITE_URL}/og-default.png`,
+    canonicalUrl: SITE_URL,
+    redirectUrl:  SITE_URL,
   });
 }
 
@@ -97,43 +98,63 @@ export default async function handler(req, res) {
   const { id } = req.query;
   const userAgent = req.headers['user-agent'] || '';
 
-  // Canonical share URL for this blog post
-  const shareUrl = `${SITE_URL}/?blog=${id}`;
-
   if (!id) {
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
     res.setHeader('Cache-Control', 'public, max-age=60');
-    return res.status(200).send(buildFallbackHtml(SITE_URL));
+    return res.status(200).send(buildFallbackHtml());
   }
 
-  // Non-crawlers: just redirect to the SPA
+  // The URL a human lands on in the SPA: /?blog=BLOG_ID
+  const redirectUrl = `${SITE_URL}/?blog=${id}`;
+
+  // Non-crawlers: redirect straight to the SPA
   if (!isCrawler(userAgent)) {
-    res.setHeader('Location', shareUrl);
+    res.setHeader('Location', redirectUrl);
     return res.status(302).end();
   }
 
-  // Crawlers: fetch the blog data and return OG HTML
+  // Crawlers: fetch blog data from our own Vercel API route and return OG HTML
   try {
-    const apiRes = await fetch(`${BACKEND}/api/blogs/${id}`);
-    if (!apiRes.ok) throw new Error(`API ${apiRes.status}`);
+    // Use the internal API URL on Vercel, or fall back to SITE_URL in dev
+    const apiBase = process.env.VERCEL_URL
+      ? `https://${process.env.VERCEL_URL}`
+      : SITE_URL;
+
+    const apiRes = await fetch(`${apiBase}/api/blogs/${id}`);
+    if (!apiRes.ok) throw new Error(`API responded with ${apiRes.status}`);
 
     const blog = await apiRes.json();
 
+    // Guard: if the API returned an error object instead of a blog
+    if (!blog?.title) throw new Error('Blog data missing title');
+
     const html = buildHtml({
-      title:       blog.title,
-      description: blog.description,
-      image:       blog.image,
-      url:         shareUrl,
+      title:        blog.title,
+      description:  blog.description || '',
+      image:        blog.image || `${SITE_URL}/og-default.png`,
+      canonicalUrl: redirectUrl,
+      redirectUrl,
     });
 
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
-    // Cache for 10 minutes — crawlers re-fetch infrequently
+    // Cache for 10 minutes; crawlers re-fetch infrequently
     res.setHeader('Cache-Control', 'public, s-maxage=600, stale-while-revalidate=60');
     return res.status(200).send(html);
   } catch (err) {
     console.error('[og.js] Failed to fetch blog:', err.message);
+
+    // Fallback: still serve OG HTML so the share doesn't look broken,
+    // but redirect the human to the right post URL
+    const fallback = buildHtml({
+      title:        'SkyLimits',
+      description:  'Insights on Fullstack, AI & ML, Health, Politics and more — by Dr. Vincent.',
+      image:        `${SITE_URL}/og-default.png`,
+      canonicalUrl: redirectUrl,
+      redirectUrl,
+    });
+
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
     res.setHeader('Cache-Control', 'public, max-age=30');
-    return res.status(200).send(buildFallbackHtml(shareUrl));
+    return res.status(200).send(fallback);
   }
 }
