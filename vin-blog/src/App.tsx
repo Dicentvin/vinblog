@@ -20,9 +20,16 @@ export default function App(): JSX.Element {
   const adminPage     = useAppSelector(selectAdminPage);
   const currentBlogId = useAppSelector(selectCurrentBlogId);
 
+  // Use localStorage so auth persists across refreshes
+  // (sessionStorage clears on tab close but NOT on F5 refresh in some browsers)
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(
-    () => sessionStorage.getItem('skylimits_admin') === 'true'
+    () => localStorage.getItem('skylimits_admin') === 'true'
   );
+
+  const handleLogout = (): void => {
+    localStorage.removeItem('skylimits_admin');
+    setIsAuthenticated(false);
+  };
 
   // ── Admin section ─────────────────────────────────────────────────────────
   if (isAdmin) {
@@ -30,7 +37,7 @@ export default function App(): JSX.Element {
       return <AdminLogin onSuccess={() => setIsAuthenticated(true)} />;
     }
     return (
-      <AdminLayout>
+      <AdminLayout onLogout={handleLogout}>
         {adminPage === 'dashboard' && <AdminDashboard />}
         {adminPage === 'blogs'     && <AdminBlogs />}
         {adminPage === 'create'    && <AdminCreateBlog />}

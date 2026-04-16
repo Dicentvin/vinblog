@@ -1,22 +1,26 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
+import { parseRoute, pushRoute } from '../router';
 import type { PublicPage, AdminPage, BlogsFilter } from '../types';
 
 interface UiState {
-  currentPage:       PublicPage;
-  currentBlogId:     string | null;
-  isAdmin:           boolean;
-  adminPage:         AdminPage;
-  adminSidebarOpen:  boolean;
-  blogsFilter:       BlogsFilter;
-  homeCategory:      string;
-  editBlogId:        string | null;
+  currentPage:      PublicPage;
+  currentBlogId:    string | null;
+  isAdmin:          boolean;
+  adminPage:        AdminPage;
+  adminSidebarOpen: boolean;
+  blogsFilter:      BlogsFilter;
+  homeCategory:     string;
+  editBlogId:       string | null;
 }
 
+// ── Boot from URL ─────────────────────────────────────────────────────────────
+const route = parseRoute();
+
 const initialState: UiState = {
-  currentPage:      'home',
-  currentBlogId:    null,
-  isAdmin:          false,
-  adminPage:        'dashboard',
+  currentPage:      route.page,
+  currentBlogId:    route.blogId,
+  isAdmin:          route.isAdmin,
+  adminPage:        route.adminPage,
   adminSidebarOpen: false,
   blogsFilter:      { search: '', category: 'all', tag: null, sort: 'newest', page: 1 },
   homeCategory:     'all',
@@ -28,17 +32,33 @@ const uiSlice = createSlice({
   initialState,
   reducers: {
     navigate(state, action: PayloadAction<{ page: PublicPage; blogId?: string }>) {
-      state.currentPage = action.payload.page;
-      if (action.payload.blogId !== undefined) state.currentBlogId = action.payload.blogId;
+      state.currentPage      = action.payload.page;
+      state.isAdmin          = false;
       state.adminSidebarOpen = false;
+      if (action.payload.blogId !== undefined) state.currentBlogId = action.payload.blogId;
+      pushRoute({ page: action.payload.page, blogId: action.payload.blogId ?? state.currentBlogId });
     },
     setIsAdmin(state, action: PayloadAction<boolean>) {
       state.isAdmin = action.payload;
-      if (!action.payload) { state.currentPage = 'home'; state.adminPage = 'dashboard'; }
+      if (!action.payload) {
+        state.currentPage = 'home';
+        state.adminPage   = 'dashboard';
+        pushRoute({ page: 'home' });
+      } else {
+        pushRoute({ isAdmin: true, adminPage: state.adminPage });
+      }
     },
     setAdminPage(state, action: PayloadAction<AdminPage>) {
       state.adminPage        = action.payload;
       state.adminSidebarOpen = false;
+      pushRoute({ isAdmin: true, adminPage: action.payload });
+    },
+    syncFromUrl(state) {
+      const r = parseRoute();
+      state.currentPage   = r.page;
+      state.currentBlogId = r.blogId;
+      state.isAdmin       = r.isAdmin;
+      state.adminPage     = r.adminPage;
     },
     toggleAdminSidebar(state)                              { state.adminSidebarOpen = !state.adminSidebarOpen; },
     setAdminSidebarOpen(state, a: PayloadAction<boolean>)  { state.adminSidebarOpen = a.payload; },
@@ -54,7 +74,7 @@ const uiSlice = createSlice({
 });
 
 export const {
-  navigate, setIsAdmin, setAdminPage,
+  navigate, setIsAdmin, setAdminPage, syncFromUrl,
   toggleAdminSidebar, setAdminSidebarOpen,
   setBlogsSearch, setBlogsCategory, setBlogsTag, setBlogsSort, setBlogsPage,
   resetBlogsFilter, setHomeCategory, setEditBlogId,
