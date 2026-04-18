@@ -31,12 +31,14 @@ export default function App(): JSX.Element {
   );
 
   // Sync Redux ↔ URL on browser back / forward
-  useEffect(() => {
-    const onPop = (): void => dispatch(syncFromUrl());
-    window.addEventListener('popstate', onPop);
-    return () => window.removeEventListener('popstate', onPop);
-  }, [dispatch]);
+useEffect(() => {
+  const onPop = (): void => {
+    dispatch(syncFromUrl());
+  };
 
+  window.addEventListener('popstate', onPop);
+  return () => window.removeEventListener('popstate', onPop);
+}, [dispatch]);
   const handleLoginSuccess = (): void => {
     localStorage.setItem('skylimits_admin', 'true');
     setIsAuthenticated(true);
