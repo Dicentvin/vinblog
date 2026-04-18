@@ -1,12 +1,14 @@
+// src/store/apiSlice.ts
+// Uses relative /api/... URLs — works on Vercel (same domain) and locally
+// when VITE_API_URL is set to http://localhost:3001 in .env.local
+
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import type { Blog, Comment, BlogsResponse, AdminStats } from '../types';
 
-// ── Base URL ──────────────────────────────────────────────────────────────────
-// In production on Vercel: VITE_API_URL is empty → uses relative /api/...
-// In development: set VITE_API_URL=http://localhost:3001 in frontend/.env
-const BASE_URL = (import.meta.env.VITE_API_URL as string) || '';
+// In production on Vercel: VITE_API_URL is empty → calls go to /api/...
+// In local dev: set VITE_API_URL=http://localhost:3001 in frontend/.env.local
+const BASE = (import.meta.env.VITE_API_URL as string | undefined) ?? '';
 
-// ── Types ─────────────────────────────────────────────────────────────────────
 export interface GetBlogsArgs {
   search?:   string;
   category?: string;
@@ -49,24 +51,22 @@ export interface CreateBlogPayload {
   status?:      'draft' | 'published';
 }
 
-// ── API slice ─────────────────────────────────────────────────────────────────
 export const apiSlice = createApi({
   reducerPath: 'api',
-  baseQuery:   fetchBaseQuery({ baseUrl: BASE_URL }),
+  baseQuery:   fetchBaseQuery({ baseUrl: BASE }),
   tagTypes:    ['Blog', 'Comment', 'Stats'],
   endpoints:   builder => ({
 
-    // ── Blogs ───────────────────────────────────────────────────────────────
+    // ── Blogs ─────────────────────────────────────────────────────────────────
     getBlogs: builder.query<BlogsResponse, GetBlogsArgs>({
       query: ({ search = '', category = '', page = 1, limit = 8, sort = 'newest', status } = {}) => {
-        const offset = (page - 1) * limit;
         const params = new URLSearchParams();
         if (search)   params.set('search',   search);
         if (category) params.set('category', category);
         if (sort)     params.set('sort',     sort);
         if (status)   params.set('status',   status);
         params.set('limit',  String(limit));
-        params.set('offset', String(offset));
+        params.set('offset', String((page - 1) * limit));
         return `/api/blogs?${params.toString()}`;
       },
       providesTags: ['Blog'],
@@ -94,21 +94,24 @@ export const apiSlice = createApi({
 
     likeBlog: builder.mutation<{ success: boolean }, string>({
       query: id => ({ url: `/api/blogs/${id}/like`, method: 'POST' }),
-      invalidatesTags: (_r, _e, id) => [{ type: 'Blog', id }],
     }),
 
     trackView: builder.mutation<{ success: boolean }, string>({
       query: id => ({ url: `/api/blogs/${id}/view`, method: 'POST' }),
     }),
 
-    // ── Comments ─────────────────────────────────────────────────────────────
+    // ── Comments ──────────────────────────────────────────────────────────────
     getAllComments: builder.query<Comment[], void>({
       query: () => '/api/comments',
       providesTags: ['Comment'],
     }),
 
     addComment: builder.mutation<Comment, { blogId: string; author: string; content: string }>({
-      query: ({ blogId, ...body }) => ({ url: `/api/blogs/${blogId}/comments`, method: 'POST', body }),
+      query: ({ blogId, ...body }) => ({
+        url:    `/api/blogs/${blogId}/comments`,
+        method: 'POST',
+        body,
+      }),
       invalidatesTags: ['Comment', 'Blog'],
     }),
 
@@ -119,31 +122,39 @@ export const apiSlice = createApi({
 
     likeComment: builder.mutation<{ success: boolean }, string>({
       query: id => ({ url: `/api/comments/${id}/like`, method: 'POST' }),
-      invalidatesTags: ['Comment'],
     }),
 
     // ── Newsletter ────────────────────────────────────────────────────────────
     subscribe: builder.mutation<{ success: boolean }, string>({
-      query: email => ({ url: '/api/newsletter/subscribe', method: 'POST', body: { email } }),
+      query: email => ({
+        url:    '/api/newsletter/subscribe',
+        method: 'POST',
+        body:   { email },
+      }),
     }),
 
-    // ── Image Upload ──────────────────────────────────────────────────────────
+    // ── Image upload ──────────────────────────────────────────────────────────
     uploadImage: builder.mutation<{ url: string; fileId: string; name: string }, FormData>({
       query: formData => ({
-        url:  '/api/upload',
-        method: 'POST',
-        body: formData,
-        // Do NOT set Content-Type — browser sets it with boundary for multipart
+        url:      '/api/upload',
+        method:   'POST',
+        body:     formData,
         formData: true,
       }),
     }),
 
-    // ── AI Assistant ──────────────────────────────────────────────────────────
-    aiAssist: builder.mutation<{ requestId: string; status: string; result?: string }, { type: string; content?: string; title?: string }>({
+    // ── AI assist ─────────────────────────────────────────────────────────────
+    aiAssist: builder.mutation<
+      { requestId: string; status: string; result?: string },
+      { type: string; content?: string; title?: string }
+    >({
       query: body => ({ url: '/api/ai/assist', method: 'POST', body }),
     }),
 
-    getAiResult: builder.query<{ id: string; status: string; result?: string; type: string }, string>({
+    getAiResult: builder.query<
+      { id: string; status: string; result?: string; type: string },
+      string
+    >({
       query: requestId => `/api/ai/result/${requestId}`,
     }),
 

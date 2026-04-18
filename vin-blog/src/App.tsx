@@ -1,6 +1,10 @@
-import { useState } from 'react';
-import { useAppSelector } from './hooks';
-import { selectCurrentPage, selectIsAdmin, selectAdminPage, selectCurrentBlogId } from './store/uiSlice';
+// src/App.tsx
+import { useState, useEffect } from 'react';
+import { useAppSelector, useAppDispatch } from './hooks';
+import {
+  selectCurrentPage, selectIsAdmin, selectAdminPage,
+  selectCurrentBlogId, syncFromUrl,
+} from './store/uiSlice';
 import BlogLayout      from './components/layout/BlogLayout';
 import AdminLayout     from './components/layout/AdminLayout';
 import AdminLogin      from './components/auth/AdminLogin';
@@ -15,26 +19,39 @@ import AdminCreateBlog from './pages/admin/AdminCreateBlog';
 import AdminComments   from './pages/admin/AdminComments';
 
 export default function App(): JSX.Element {
+  const dispatch      = useAppDispatch();
   const currentPage   = useAppSelector(selectCurrentPage);
   const isAdmin       = useAppSelector(selectIsAdmin);
   const adminPage     = useAppSelector(selectAdminPage);
   const currentBlogId = useAppSelector(selectCurrentBlogId);
 
-  // Use localStorage so auth persists across refreshes
-  // (sessionStorage clears on tab close but NOT on F5 refresh in some browsers)
+  // localStorage persists across F5 refresh (sessionStorage does NOT)
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(
     () => localStorage.getItem('skylimits_admin') === 'true'
   );
+
+  // Sync Redux ↔ URL on browser back / forward
+  useEffect(() => {
+    const onPop = (): void => dispatch(syncFromUrl());
+    window.addEventListener('popstate', onPop);
+    return () => window.removeEventListener('popstate', onPop);
+  }, [dispatch]);
+
+  const handleLoginSuccess = (): void => {
+    localStorage.setItem('skylimits_admin', 'true');
+    setIsAuthenticated(true);
+  };
 
   const handleLogout = (): void => {
     localStorage.removeItem('skylimits_admin');
     setIsAuthenticated(false);
   };
 
-  // ── Admin section ─────────────────────────────────────────────────────────
+  // ── Admin ──────────────────────────────────────────────────────────────────
   if (isAdmin) {
+    // Always show login first — never skip it
     if (!isAuthenticated) {
-      return <AdminLogin onSuccess={() => setIsAuthenticated(true)} />;
+      return <AdminLogin onSuccess={handleLoginSuccess} />;
     }
     return (
       <AdminLayout onLogout={handleLogout}>
@@ -46,7 +63,7 @@ export default function App(): JSX.Element {
     );
   }
 
-  // ── Public section ────────────────────────────────────────────────────────
+  // ── Public ─────────────────────────────────────────────────────────────────
   return (
     <BlogLayout>
       {currentPage === 'home'    && <HomePage />}

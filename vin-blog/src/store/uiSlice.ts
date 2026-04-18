@@ -1,5 +1,5 @@
+// src/store/uiSlice.ts
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
-import { parseRoute, pushRoute } from '../router';
 import type { PublicPage, AdminPage, BlogsFilter } from '../types';
 
 interface UiState {
@@ -13,14 +13,55 @@ interface UiState {
   editBlogId:       string | null;
 }
 
-// ── Boot from URL ─────────────────────────────────────────────────────────────
-const route = parseRoute();
+// ── Parse current URL hash into app state ─────────────────────────────────────
+function parseHash(): Pick<UiState, 'currentPage' | 'currentBlogId' | 'isAdmin' | 'adminPage'> {
+  if (typeof window === 'undefined') {
+    return { currentPage: 'home', currentBlogId: null, isAdmin: false, adminPage: 'dashboard' };
+  }
+
+  const raw  = window.location.hash.replace(/^#\/?/, '').toLowerCase().trim();
+
+  // #admin  or  #admin/blogs  #admin/create  #admin/comments
+  if (raw === 'admin' || raw.startsWith('admin/')) {
+    const sub = raw.split('/')[1];
+    const adminPage: AdminPage =
+      sub === 'blogs' || sub === 'create' || sub === 'comments' ? sub : 'dashboard';
+    return { currentPage: 'home', currentBlogId: null, isAdmin: true, adminPage };
+  }
+
+  // #blog/SOME-UUID
+  if (raw.startsWith('blog/')) {
+    const blogId = decodeURIComponent(raw.slice(5));
+    if (blogId) return { currentPage: 'blog', currentBlogId: blogId, isAdmin: false, adminPage: 'dashboard' };
+  }
+
+  const map: Record<string, PublicPage> = {
+    blogs: 'blogs', about: 'about', contact: 'contact', home: 'home', '': 'home',
+  };
+  return {
+    currentPage:   map[raw] ?? 'home',
+    currentBlogId: null,
+    isAdmin:       false,
+    adminPage:     'dashboard',
+  };
+}
+
+function writeHash(hash: string): void {
+  if (typeof window === 'undefined') return;
+  const next = hash ? `#${hash}` : '/';
+  if (window.location.hash !== `#${hash}` && !(hash === '' && window.location.hash === '')) {
+    window.history.pushState(null, '', next);
+  }
+}
+
+// Boot from URL so refresh works
+const boot = parseHash();
 
 const initialState: UiState = {
-  currentPage:      route.page,
-  currentBlogId:    route.blogId,
-  isAdmin:          route.isAdmin,
-  adminPage:        route.adminPage,
+  currentPage:      boot.currentPage,
+  currentBlogId:    boot.currentBlogId,
+  isAdmin:          boot.isAdmin,
+  adminPage:        boot.adminPage,
   adminSidebarOpen: false,
   blogsFilter:      { search: '', category: 'all', tag: null, sort: 'newest', page: 1 },
   homeCategory:     'all',
@@ -36,30 +77,42 @@ const uiSlice = createSlice({
       state.isAdmin          = false;
       state.adminSidebarOpen = false;
       if (action.payload.blogId !== undefined) state.currentBlogId = action.payload.blogId;
-      pushRoute({ page: action.payload.page, blogId: action.payload.blogId ?? state.currentBlogId });
+
+      if (action.payload.page === 'blog' && action.payload.blogId) {
+        writeHash(`blog/${action.payload.blogId}`);
+      } else if (action.payload.page === 'home') {
+        writeHash('');
+      } else {
+        writeHash(action.payload.page);
+      }
     },
+
     setIsAdmin(state, action: PayloadAction<boolean>) {
       state.isAdmin = action.payload;
       if (!action.payload) {
         state.currentPage = 'home';
         state.adminPage   = 'dashboard';
-        pushRoute({ page: 'home' });
+        writeHash('');
       } else {
-        pushRoute({ isAdmin: true, adminPage: state.adminPage });
+        writeHash('admin');
       }
     },
+
     setAdminPage(state, action: PayloadAction<AdminPage>) {
       state.adminPage        = action.payload;
       state.adminSidebarOpen = false;
-      pushRoute({ isAdmin: true, adminPage: action.payload });
+      writeHash(action.payload === 'dashboard' ? 'admin' : `admin/${action.payload}`);
     },
+
+    // Called on browser back / forward
     syncFromUrl(state) {
-      const r = parseRoute();
-      state.currentPage   = r.page;
-      state.currentBlogId = r.blogId;
+      const r = parseHash();
+      state.currentPage   = r.currentPage;
+      state.currentBlogId = r.currentBlogId;
       state.isAdmin       = r.isAdmin;
       state.adminPage     = r.adminPage;
     },
+
     toggleAdminSidebar(state)                              { state.adminSidebarOpen = !state.adminSidebarOpen; },
     setAdminSidebarOpen(state, a: PayloadAction<boolean>)  { state.adminSidebarOpen = a.payload; },
     setBlogsSearch(state, a: PayloadAction<string>)        { state.blogsFilter.search   = a.payload; state.blogsFilter.page = 1; },
