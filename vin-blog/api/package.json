@@ -1,6 +1,7 @@
 {
   "name": "skylimits-api",
   "version": "1.0.0",
+  "type": "module",
   "private": true,
   "dependencies": {
     "drizzle-orm": "^0.33.0",
