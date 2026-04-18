@@ -7,7 +7,7 @@ interface Props {
   image?:       string;
 }
 
-const MY_EMAIL   = 'dr.vincent@skylimits.dev';
+const MY_EMAIL   = 'chukwudivincent79@gmail.com';
 const MY_TWITTER = 'drvincent';
 
 function buildShareUrl(blogId: string): string {
