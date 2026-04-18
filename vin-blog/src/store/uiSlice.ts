@@ -105,13 +105,14 @@ const uiSlice = createSlice({
     },
 
     // Called on browser back / forward
-    syncFromUrl(state) {
-      const r = parseHash();
-      state.currentPage   = r.currentPage;
-      state.currentBlogId = r.currentBlogId;
-      state.isAdmin       = r.isAdmin;
-      state.adminPage     = r.adminPage;
-    },
+  syncFromUrl: (state): void => {
+  const r = parseHash();
+
+  state.currentPage = r.currentPage;
+  state.currentBlogId = r.currentBlogId;
+  state.isAdmin = r.isAdmin;
+  state.adminPage = r.adminPage;
+},
 
     toggleAdminSidebar(state)                              { state.adminSidebarOpen = !state.adminSidebarOpen; },
     setAdminSidebarOpen(state, a: PayloadAction<boolean>)  { state.adminSidebarOpen = a.payload; },
