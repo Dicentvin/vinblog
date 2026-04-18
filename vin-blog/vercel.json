@@ -6,21 +6,5 @@
       "memory": 512,
       "maxDuration": 15
     }
-  },
-  "rewrites": [
-    { "source": "/api/blogs/:id/like",      "destination": "/api/blogs/[id]" },
-    { "source": "/api/blogs/:id/view",      "destination": "/api/blogs/[id]" },
-    { "source": "/api/blogs/:id/comments",  "destination": "/api/blogs/[id]" },
-    { "source": "/api/blogs/:id",           "destination": "/api/blogs/[id]" },
-    { "source": "/api/blogs",               "destination": "/api/blogs/index" },
-    { "source": "/api/comments/:id/like",   "destination": "/api/comments/[id]" },
-    { "source": "/api/comments/:id",        "destination": "/api/comments/[id]" },
-    { "source": "/api/comments",            "destination": "/api/comments/index" },
-    { "source": "/api/newsletter/subscribe","destination": "/api/newsletter/subscribe" },
-    { "source": "/api/upload",              "destination": "/api/upload/index" },
-    { "source": "/api/admin/login",         "destination": "/api/admin/login" },
-    { "source": "/api/admin/stats",         "destination": "/api/admin/stats" },
-    { "source": "/api/og",                  "destination": "/api/og" },
-    { "source": "/((?!api/).*)",            "destination": "/index.html" }
-  ]
+  }
 }
