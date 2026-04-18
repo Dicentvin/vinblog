@@ -59,23 +59,26 @@ let _db = null;
 export function getDb() {
   if (_db) return _db;
 
+  if (!process.env.DATABASE_URL) {
+    throw new Error("DATABASE_URL is missing in Vercel environment variables");
+  }
+
   const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
-    ssl:              { rejectUnauthorized: false },
-    max:              2,          // Supabase free = 15 total; keep low
+    ssl: process.env.NODE_ENV === 'production'
+      ? { rejectUnauthorized: false }
+      : false,
+    max: 2,
     idleTimeoutMillis: 10000,
     connectionTimeoutMillis: 5000,
   });
 
-  pool.on('error', (err) => {
-    console.error('Unexpected DB pool error:', err.message);
-    _db = null; // force re-connect next call
+  _db = drizzle(pool, {
+    schema: { blogs, comments, newsletters, aiRequests }
   });
 
-  _db = drizzle(pool, { schema: { blogs, comments, newsletters, aiRequests } });
   return _db;
 }
-
 // ── CORS ──────────────────────────────────────────────────────────────────────
 export function cors(req, res) {
   const allowed = [
