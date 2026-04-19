@@ -7,64 +7,55 @@ interface Props {
   image?:       string;
 }
 
-const MY_EMAIL   = 'chukwudivincent79@gmail.com';
+const MY_EMAIL   = 'dr.vincent@skylimits.dev';
 const MY_TWITTER = 'drvincent';
-
-function buildShareUrl(blogId: string): string {
-  const origin =
-    typeof window !== 'undefined'
-      ? window.location.origin
-      : 'https://skylimits.vercel.app';
-  return `${origin}/api/og?id=${encodeURIComponent(blogId)}`;
-}
-
-function buildHumanUrl(blogId: string): string {
-  const origin =
-    typeof window !== 'undefined'
-      ? window.location.origin
-      : 'https://skylimits.vercel.app';
-  return `${origin}/?blog=${encodeURIComponent(blogId)}`;
-}
 
 export default function SocialShare({ title, blogId, description, image }: Props): JSX.Element {
   const [copied, setCopied] = useState(false);
 
-  const shareUrl     = buildShareUrl(blogId);
-  const humanUrl     = buildHumanUrl(blogId);
-  const encodedShare = encodeURIComponent(shareUrl);
+  const origin = typeof window !== 'undefined'
+    ? window.location.origin
+    : 'https://vinblog-q9oe.vercel.app';
+
+  // This is the URL shared to social media
+  // It goes to /api/og which returns proper OG meta tags for crawlers
+  // and redirects humans to /#blog/ID
+  const shareUrl     = `${origin}/api/og?id=${encodeURIComponent(blogId)}`;
+  const encodedUrl   = encodeURIComponent(shareUrl);
   const encodedTitle = encodeURIComponent(title);
   const emailBody    = encodeURIComponent(
-    `I just read "${title}" on SkyLimits and thought you'd enjoy it:\n\n${humanUrl}`
+    `I just read "${title}" on SkyLimits.\n\nRead it here: ${shareUrl}`
   );
 
   const SHARES = [
-    {
-      label: 'Twitter / X',
-      icon:  '𝕏',
-      bg:    'bg-sky-900/20 border-sky-500/30 hover:bg-sky-900/30',
-      text:  'text-sky-400',
-      href:  `https://twitter.com/intent/tweet?text=${encodedTitle}&url=${encodedShare}&via=${MY_TWITTER}`,
-    },
     {
       label: 'WhatsApp',
       icon:  '💬',
       bg:    'bg-emerald-900/20 border-emerald-500/30 hover:bg-emerald-900/30',
       text:  'text-emerald-400',
-      href:  `https://wa.me/?text=${encodedTitle}%20${encodedShare}`,
-    },
-    {
-      label: 'LinkedIn',
-      icon:  'in',
-      bg:    'bg-blue-900/20 border-blue-500/30 hover:bg-blue-900/30',
-      text:  'text-blue-400',
-      href:  `https://www.linkedin.com/sharing/share-offsite/?url=${encodedShare}`,
+      // WhatsApp uses this format to generate the preview
+      href:  `https://wa.me/?text=${encodedTitle}%20${encodedUrl}`,
     },
     {
       label: 'Facebook',
       icon:  'f',
+      bg:    'bg-blue-900/20 border-blue-500/30 hover:bg-blue-900/30',
+      text:  'text-blue-400',
+      href:  `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`,
+    },
+    {
+      label: 'Twitter / X',
+      icon:  '𝕏',
+      bg:    'bg-sky-900/20 border-sky-500/30 hover:bg-sky-900/30',
+      text:  'text-sky-400',
+      href:  `https://twitter.com/intent/tweet?text=${encodedTitle}&url=${encodedUrl}&via=${MY_TWITTER}`,
+    },
+    {
+      label: 'LinkedIn',
+      icon:  'in',
       bg:    'bg-indigo-900/20 border-indigo-500/30 hover:bg-indigo-900/30',
       text:  'text-indigo-400',
-      href:  `https://www.facebook.com/sharer/sharer.php?u=${encodedShare}`,
+      href:  `https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}`,
     },
     {
       label: 'Email',
@@ -77,40 +68,43 @@ export default function SocialShare({ title, blogId, description, image }: Props
 
   const handleCopy = async (): Promise<void> => {
     try {
-      await navigator.clipboard.writeText(humanUrl);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2500);
+      await navigator.clipboard.writeText(shareUrl);
     } catch {
       const el = document.createElement('textarea');
-      el.value = humanUrl;
+      el.value = shareUrl;
       document.body.appendChild(el);
       el.select();
       document.execCommand('copy');
       document.body.removeChild(el);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2500);
     }
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2500);
   };
 
   return (
     <div className="mt-10 pt-8 border-t border-border">
-      <div className="flex items-center gap-3 mb-4">
+
+      {/* Header */}
+      <div className="flex items-center gap-3 mb-3">
         <div className="flex-1 h-px bg-border" />
-        <div className="text-center flex-shrink-0">
-          <p className="text-[0.62rem] font-bold tracking-widest uppercase text-accent">Share This Article</p>
-        </div>
+        <p className="text-[0.62rem] font-bold tracking-widest uppercase text-accent flex-shrink-0">
+          Share This Article
+        </p>
         <div className="flex-1 h-px bg-border" />
       </div>
 
       <p className="text-center text-muted text-xs mb-5">
-        If you found this article helpful, sharing it takes 5 seconds and makes a huge difference.
+        Share this article — it will show the image and title on WhatsApp and Facebook.
       </p>
 
+      {/* Blog preview card (shows what social media will display) */}
       {image && (
         <div className="max-w-sm mx-auto mb-5 border border-border rounded-xl overflow-hidden bg-surface">
-          <img src={image} alt={title} className="w-full h-32 object-cover" />
+          <img src={image} alt={title} className="w-full h-36 object-cover" />
           <div className="p-3">
-            <p className="text-[0.6rem] font-bold tracking-widest uppercase text-accent mb-0.5">skylimits.vercel.app</p>
+            <p className="text-[0.58rem] font-bold tracking-widest uppercase text-accent mb-1">
+              vinblog-q9oe.vercel.app
+            </p>
             <p className="text-xs font-semibold text-white leading-snug line-clamp-2 mb-1">{title}</p>
             {description && (
               <p className="text-[0.65rem] text-muted leading-relaxed line-clamp-2">{description}</p>
@@ -119,6 +113,7 @@ export default function SocialShare({ title, blogId, description, image }: Props
         </div>
       )}
 
+      {/* Share buttons */}
       <div className="flex flex-wrap gap-2 justify-center mb-4">
         {SHARES.map(s => (
           <a
@@ -134,8 +129,9 @@ export default function SocialShare({ title, blogId, description, image }: Props
         ))}
       </div>
 
-      <div className="flex items-center gap-2 bg-surface2 border border-border rounded-xl px-3 py-2.5 max-w-md mx-auto">
-        <span className="text-muted text-xs flex-1 truncate">{humanUrl}</span>
+      {/* Copy link */}
+      <div className="flex items-center gap-2 bg-surface2 border border-border rounded-xl px-3 py-2.5 max-w-md mx-auto mb-6">
+        <span className="text-muted text-xs flex-1 truncate">{shareUrl}</span>
         <button
           onClick={() => void handleCopy()}
           className={`flex-shrink-0 text-xs font-semibold px-3 py-1.5 rounded-lg border transition-all cursor-pointer font-body ${
@@ -148,18 +144,23 @@ export default function SocialShare({ title, blogId, description, image }: Props
         </button>
       </div>
 
-      <div className="mt-6 flex flex-col sm:flex-row items-center gap-4 bg-surface border border-border rounded-xl p-4">
+      {/* Author card */}
+      <div className="flex flex-col sm:flex-row items-center gap-4 bg-surface border border-border rounded-xl p-4">
         <img
           src="/authorimg.png"
           alt="Dr. Vincent"
-          className="w-12 h-12 rounded-full border-2 border-accent flex-shrink-0"
+          className="w-12 h-12 rounded-full border-2 border-accent flex-shrink-0 object-cover"
+          onError={e => { (e.currentTarget as HTMLImageElement).src = 'https://i.pravatar.cc/150?img=51'; }}
         />
         <div className="text-center sm:text-left flex-1">
           <p className="text-sm font-bold text-white">Written by Dr. Vincent</p>
-          <p className="text-xs text-muted">Medical Doctor · Full-Stack Developer · Writer</p>
+          <p className="text-xs text-muted">Medical Doctor · Gynaecologic Oncologist · Full-Stack Developer</p>
         </div>
         <div className="flex gap-2 flex-shrink-0">
-          <a href={`mailto:${MY_EMAIL}`} className="btn-ghost text-xs px-3 py-1.5 flex items-center gap-1.5">
+          <a
+            href={`mailto:${MY_EMAIL}`}
+            className="btn-ghost text-xs px-3 py-1.5 flex items-center gap-1.5"
+          >
             📧 Email
           </a>
           <a

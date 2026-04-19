@@ -1,4 +1,3 @@
-// src/components/auth/AdminLogin.tsx
 import { useState, type FormEvent } from 'react';
 
 interface Props { onSuccess: () => void; }
@@ -10,24 +9,24 @@ export default function AdminLogin({ onSuccess }: Props): JSX.Element {
   const [loading,  setLoading]  = useState(false);
   const [showPass, setShowPass] = useState(false);
 
-  // Credentials from Vite env variables (set in .env or Vercel dashboard)
-  const CORRECT_USER = import.meta.env.VITE_ADMIN_USERNAME as string;
-  const CORRECT_PASS = import.meta.env.VITE_ADMIN_PASSWORD as string;
+  // ⚠️ Vite REQUIRES the VITE_ prefix to expose env vars to the browser
+  // import.meta.env.ADMIN_USERNAME does NOT work — must be VITE_ADMIN_USERNAME
+  const CORRECT_USER = (import.meta.env.VITE_ADMIN_USERNAME as string) ?? 'vincent';
+  const CORRECT_PASS = (import.meta.env.VITE_ADMIN_PASSWORD as string) ?? 'Centvin@213';
 
   const handleSubmit = async (e: FormEvent): Promise<void> => {
     e.preventDefault();
     setError('');
     setLoading(true);
-
-    await new Promise(r => setTimeout(r, 500)); // prevent brute force
+    await new Promise(r => setTimeout(r, 500));
 
     if (username.trim() === CORRECT_USER && password === CORRECT_PASS) {
-      onSuccess(); // App.tsx sets localStorage + isAuthenticated
+      localStorage.setItem('skylimits_admin', 'true');
+      onSuccess();
     } else {
       setError('Invalid username or password.');
       setPassword('');
     }
-
     setLoading(false);
   };
 
@@ -40,9 +39,7 @@ export default function AdminLogin({ onSuccess }: Props): JSX.Element {
           <div className="w-14 h-14 bg-accent rounded-2xl flex items-center justify-center mb-4 shadow-[0_0_40px_rgba(212,175,55,0.3)]">
             <span className="font-display font-bold text-ink text-2xl">S</span>
           </div>
-          <h1 className="font-display font-bold text-2xl text-white tracking-tight mb-1">
-            SkyLimits Admin
-          </h1>
+          <h1 className="font-display font-bold text-2xl text-white tracking-tight mb-1">SkyLimits Admin</h1>
           <p className="text-muted text-sm">Sign in to access the dashboard</p>
         </div>
 
@@ -50,9 +47,7 @@ export default function AdminLogin({ onSuccess }: Props): JSX.Element {
         <div className="bg-surface border border-border rounded-2xl p-7 shadow-[0_24px_64px_rgba(0,0,0,0.4)]">
           <form onSubmit={e => void handleSubmit(e)} className="space-y-4">
             <div>
-              <label className="block text-xs font-semibold text-muted uppercase tracking-widest mb-2">
-                Username
-              </label>
+              <label className="block text-xs font-semibold text-muted uppercase tracking-widest mb-2">Username</label>
               <input
                 type="text"
                 className="input-field text-sm"
@@ -64,11 +59,8 @@ export default function AdminLogin({ onSuccess }: Props): JSX.Element {
                 required
               />
             </div>
-
             <div>
-              <label className="block text-xs font-semibold text-muted uppercase tracking-widest mb-2">
-                Password
-              </label>
+              <label className="block text-xs font-semibold text-muted uppercase tracking-widest mb-2">Password</label>
               <div className="relative">
                 <input
                   type={showPass ? 'text' : 'password'}

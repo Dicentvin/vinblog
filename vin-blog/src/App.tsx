@@ -1,4 +1,3 @@
-// src/App.tsx
 import { useState, useEffect } from 'react';
 import { useAppSelector, useAppDispatch } from './hooks';
 import {
@@ -25,21 +24,19 @@ export default function App(): JSX.Element {
   const adminPage     = useAppSelector(selectAdminPage);
   const currentBlogId = useAppSelector(selectCurrentBlogId);
 
-  // localStorage persists across F5 refresh (sessionStorage does NOT)
+  // localStorage persists across F5 refresh — sessionStorage does NOT
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(
     () => localStorage.getItem('skylimits_admin') === 'true'
   );
 
-  // Sync Redux ↔ URL on browser back / forward
-useEffect(() => {
-  const onPop = (): void => {
-    dispatch(syncFromUrl());
-  };
+  // Sync Redux state on browser back/forward
+  useEffect(() => {
+    const onPop = (): void => dispatch(syncFromUrl());
+    window.addEventListener('popstate', onPop);
+    return () => window.removeEventListener('popstate', onPop);
+  }, [dispatch]);
 
-  window.addEventListener('popstate', onPop);
-  return () => window.removeEventListener('popstate', onPop);
-}, [dispatch]);
-  const handleLoginSuccess = (): void => {
+  const handleSuccess = (): void => {
     localStorage.setItem('skylimits_admin', 'true');
     setIsAuthenticated(true);
   };
@@ -51,9 +48,8 @@ useEffect(() => {
 
   // ── Admin ──────────────────────────────────────────────────────────────────
   if (isAdmin) {
-    // Always show login first — never skip it
     if (!isAuthenticated) {
-      return <AdminLogin onSuccess={handleLoginSuccess} />;
+      return <AdminLogin onSuccess={handleSuccess} />;
     }
     return (
       <AdminLayout onLogout={handleLogout}>
