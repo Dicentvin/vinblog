@@ -144,7 +144,7 @@ export default function HomePage(): JSX.Element {
   const [subscribe] = useSubscribeMutation();
 
   const apiCat = homeCategory === 'all' ? '' : homeCategory;
-  const { data, isLoading } = useGetBlogsQuery({ limit: 50, category: apiCat });
+  const { data, isLoading } = useGetBlogsQuery({ limit: 50, category: apiCat, status: 'published' });
   const blogs    = data?.data ?? [];
   const featured = blogs.filter(b => b.featured);
   const latest   = [...blogs].sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime());
