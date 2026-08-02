@@ -22,7 +22,7 @@ export default function BlogPostPage({ blogId }: Props): JSX.Element {
   const { navigate } = useNav();
 
   const { data: blog, isLoading, isError } = useGetBlogByIdQuery(blogId, { skip: !blogId });
-  const { data: relatedData } = useGetBlogsQuery({ limit: 50 }, { skip: !blog });
+  const { data: relatedData } = useGetBlogsQuery({ limit: 50, status: 'published' }, { skip: !blog });
 
   const [likeBlog]   = useLikeBlogMutation();
   const [addComment] = useAddCommentMutation();
