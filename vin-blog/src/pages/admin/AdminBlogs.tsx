@@ -282,6 +282,7 @@ function EditModal({ blog, onClose }: { blog: Blog; onClose: () => void }): JSX.
             ))}
           </div>
           <div className="flex gap-2">
+            <button onClick={() => window.open(`/#blog/${blog.id}`, '_blank')} className="btn-ghost text-sm px-4">👁 Preview</button>
             <button onClick={onClose} className="btn-ghost text-sm px-4">Cancel</button>
             <button onClick={() => void handleSave()} disabled={saving || uploading || success || !title.trim()} className="btn-primary text-sm px-5 disabled:opacity-60">
               {saving ? '⏳ Saving…' : success ? '✓ Saved!' : 'Save Changes'}
@@ -298,12 +299,14 @@ export default function AdminBlogs(): JSX.Element {
   const { switchAdminPage } = useNav();
   const [search,    setSearch]    = useState('');
   const [cat,       setCat]       = useState('all');
+  const [statusF,   setStatusF]   = useState<'all'|'draft'|'published'>('all');
   const [confirmId, setConfirmId] = useState<string | null>(null);
   const [editBlog,  setEditBlog]  = useState<Blog | null>(null);
   const [page,      setPage]      = useState(1);
 
   const { data, isLoading } = useGetBlogsQuery({ limit: 200 });
   const [deleteBlog]        = useDeleteBlogMutation();
+  const [updateBlog]        = useUpdateBlogMutation();
 
   const blogs = data?.data ?? [];
   const cats  = ['all', ...Array.from(new Set(blogs.map(b => b.category)))];
@@ -317,9 +320,10 @@ export default function AdminBlogs(): JSX.Element {
         b.author.name.toLowerCase().includes(q) ||
         (b.description ?? '').toLowerCase().includes(q);
       const matchCat = cat === 'all' || b.category === cat;
-      return matchSearch && matchCat;
+      const matchStatus = statusF === 'all' || b.status === statusF;
+      return matchSearch && matchCat && matchStatus;
     }),
-    [blogs, search, cat]
+    [blogs, search, cat, statusF]
   );
 
   const totalPages  = Math.max(1, Math.ceil(filtered.length / PER_PAGE));
@@ -333,6 +337,14 @@ export default function AdminBlogs(): JSX.Element {
     setConfirmId(null);
   };
 
+  const [togglingId, setTogglingId] = useState<string | null>(null);
+  const handleToggleStatus = async (b: Blog): Promise<void> => {
+    const next = b.status === 'published' ? 'draft' : 'published';
+    setTogglingId(b.id);
+    try { await updateBlog({ id: b.id, status: next }).unwrap(); } catch { /* handled */ }
+    setTogglingId(null);
+  };
+
   return (
     <>
       {editBlog && <EditModal blog={editBlog} onClose={() => setEditBlog(null)} />}
@@ -344,6 +356,22 @@ export default function AdminBlogs(): JSX.Element {
             <h1 className="font-display font-bold text-2xl sm:text-3xl text-white tracking-tight">All Blogs</h1>
           </div>
           <button onClick={() => switchAdminPage('create')} className="btn-primary">✚ New Post</button>
+        </div>
+
+        {/* ── Status toggle ── */}
+        <div className="flex gap-1 mb-3 bg-surface2 p-1 rounded-xl w-fit">
+          {(['all','published','draft'] as const).map(s => (
+            <button
+              key={s}
+              onClick={() => { setStatusF(s); setPage(1); }}
+              className={`px-3.5 py-1.5 rounded-lg text-[0.68rem] font-semibold tracking-wide uppercase transition-all cursor-pointer font-body border-0 ${
+                statusF === s ? 'bg-accent text-ink' : 'bg-transparent text-muted hover:text-white'
+              }`}
+            >
+              {s === 'all' ? 'All' : s === 'published' ? 'Published' : 'Drafts'}
+              {s !== 'all' && <span className="ml-1.5 opacity-70">{blogs.filter(b => b.status === s).length}</span>}
+            </button>
+          ))}
         </div>
 
         {/* ── Search + Filter ── */}
@@ -414,10 +442,21 @@ export default function AdminBlogs(): JSX.Element {
                       <td className="py-3 px-3.5 border-b border-border text-xs text-muted">{b.views.toLocaleString()}</td>
                       <td className="py-3 px-3.5 border-b border-border text-xs text-muted">💬 {b.comments?.length ?? 0}</td>
                       <td className="py-3 px-3.5 border-b border-border">
-                        <span className={b.featured ? 'pill-feat' : 'pill-pub'}>{b.featured ? 'Featured' : 'Published'}</span>
+                        <div className="flex items-center gap-1.5">
+                          <button
+                            onClick={() => void handleToggleStatus(b)}
+                            disabled={togglingId === b.id}
+                            className={`${b.status === 'draft' ? 'pill-draft' : 'pill-pub'} cursor-pointer border-0 disabled:opacity-60`}
+                            title={b.status === 'draft' ? 'Click to publish' : 'Click to unpublish'}
+                          >
+                            {togglingId === b.id ? '⏳' : b.status === 'draft' ? '● Draft' : '✓ Published'}
+                          </button>
+                          {b.featured && <span className="pill-feat">Featured</span>}
+                        </div>
                       </td>
                       <td className="py-3 px-3.5 border-b border-border">
                         <div className="flex gap-1.5">
+                          <button className="btn-ghost py-1 px-2.5 text-[0.68rem]" onClick={() => window.open(`/#blog/${b.id}`, '_blank')}>👁 Preview</button>
                           <button className="btn-ghost py-1 px-2.5 text-[0.68rem]" onClick={() => setEditBlog(b)}>✏ Edit</button>
                           {confirmId === b.id ? (
                             <div className="flex gap-1">
