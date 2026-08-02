@@ -52,7 +52,7 @@ export default function BlogsPage():JSX.Element{
   const {navigate}=useNav();
   const {filter,setSearch,setCategory,toggleTag,setSort,setPage,reset}=useBlogsFilter();
   const apiCat=filter.category==='all'?'':filter.category;
-  const {data,isLoading,isError}=useGetBlogsQuery({search:filter.search,category:apiCat,page:filter.page,limit:PER,sort:filter.sort});
+  const {data,isLoading,isError}=useGetBlogsQuery({search:filter.search,category:apiCat,page:filter.page,limit:PER,sort:filter.sort,status:'published'});;
   const blogs=data?.data??[];
   const total=data?.total??0;
   const totalPages=Math.max(1,Math.ceil(total/PER));
