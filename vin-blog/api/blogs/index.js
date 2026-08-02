@@ -16,7 +16,7 @@ export default async function handler(req, res) {
         limit    = '8',
         offset   = '0',
         sort     = 'newest',
-        status   = 'published',
+        status,
       } = req.query;
 
       const conditions = [];
