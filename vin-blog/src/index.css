@@ -66,6 +66,10 @@
     @apply inline-block px-2.5 py-0.5 rounded-full text-[0.62rem] font-bold
            bg-emerald-500/10 text-emerald-400 border border-emerald-500/20;
   }
+  .pill-draft {
+    @apply inline-block px-2.5 py-0.5 rounded-full text-[0.62rem] font-bold
+           bg-amber-500/10 text-amber-400 border border-amber-500/20;
+  }
   .pill-feat {
     @apply inline-block px-2.5 py-0.5 rounded-full text-[0.62rem] font-bold
            bg-accent/10 text-accent border border-accent/20;
