@@ -10,17 +10,23 @@ interface Props {
 const MY_EMAIL   = 'dr.vincent@skylimits.dev';
 const MY_TWITTER = 'drvincent';
 
+// Always use the stable, public production domain — never
+// window.location.origin. Vercel gives every deployment its own unique
+// "preview" URL (e.g. drvincentblog-fe6lb89kr-....vercel.app), and those
+// are gated behind Vercel's Deployment Protection. If a share link is
+// built from window.location.origin while browsing one of those URLs,
+// WhatsApp/Facebook's crawler can't get past the login wall and shows a
+// broken "Overview - Vercel" preview instead of the blog post. This
+// constant should match CANONICAL_SITE_URL used in api/og.js.
+const SITE_URL = (import.meta.env.VITE_SITE_URL as string | undefined) || 'https://vinblog-q9oe.vercel.app';
+
 export default function SocialShare({ title, blogId, description, image }: Props): JSX.Element {
   const [copied, setCopied] = useState(false);
-
-  const origin = typeof window !== 'undefined'
-    ? window.location.origin
-    : 'https://vinblog-q9oe.vercel.app';
 
   // This is the URL shared to social media
   // It goes to /api/og which returns proper OG meta tags for crawlers
   // and redirects humans to /#blog/ID
-  const shareUrl     = `${origin}/api/og?id=${encodeURIComponent(blogId)}`;
+  const shareUrl     = `${SITE_URL}/api/og?id=${encodeURIComponent(blogId)}`;
   const encodedUrl   = encodeURIComponent(shareUrl);
   const encodedTitle = encodeURIComponent(title);
   const emailBody    = encodeURIComponent(
