@@ -6,7 +6,8 @@ import {
   useUploadImageMutation,
 } from '../../store/apiSlice';
 import type { UpdateBlogArgs } from '../../store/apiSlice';
-import { useNav } from '../../hooks';
+import { useNav, useEditBlog } from '../../hooks';
+import RichTextEditor from '../../components/RichTextEditor';
 import type { Blog } from '../../types';
 
 const PER_PAGE = 10;
@@ -29,6 +30,14 @@ function EditModal({ blog, onClose }: { blog: Blog; onClose: () => void }): JSX.
   const [updateBlog,  { isLoading: saving }]   = useUpdateBlogMutation();
   const [uploadImage, { isLoading: uploading }] = useUploadImageMutation();
   const fileRef = useRef<HTMLInputElement>(null);
+  const { switchAdminPage } = useNav();
+  const { setEditBlogId }   = useEditBlog();
+
+  const openFullEditor = (): void => {
+    setEditBlogId(blog.id);
+    switchAdminPage('create');
+    onClose();
+  };
 
   const [tab,        setTab]        = useState<EditTab>('basic');
   const [title,      setTitle]      = useState(blog.title ?? '');
@@ -118,7 +127,10 @@ function EditModal({ blog, onClose }: { blog: Blog; onClose: () => void }): JSX.
             <p className="text-[0.58rem] text-muted tracking-widest uppercase mb-0.5">Editing Post</p>
             <h2 className="font-display font-bold text-base text-white truncate max-w-[300px]">{blog.title}</h2>
           </div>
-          <button onClick={onClose} className="w-9 h-9 rounded-xl bg-surface2 border border-border text-muted hover:text-white cursor-pointer font-body flex items-center justify-center text-lg flex-shrink-0 ml-3">✕</button>
+          <div className="flex items-center gap-2 flex-shrink-0 ml-3">
+            <button onClick={openFullEditor} title="Open full editor with content blocks" className="btn-ghost text-[0.68rem] px-2.5 py-1.5">⤢ Full Editor</button>
+            <button onClick={onClose} className="w-9 h-9 rounded-xl bg-surface2 border border-border text-muted hover:text-white cursor-pointer font-body flex items-center justify-center text-lg">✕</button>
+          </div>
         </div>
 
         {/* Tabs */}
@@ -192,10 +204,10 @@ function EditModal({ blog, onClose }: { blog: Blog; onClose: () => void }): JSX.
           {/* ── Content ── */}
           {tab === 'content' && (
             <div>
-              <label className="block text-[0.62rem] font-bold tracking-widests uppercase text-muted mb-1">Full Article Content (HTML)</label>
-              <p className="text-[0.63rem] text-muted mb-3">Use &lt;h2&gt;, &lt;p&gt;, &lt;strong&gt;, &lt;blockquote&gt; tags</p>
-              <textarea className="input-field text-sm resize-y font-mono" rows={20} value={content} onChange={e => setContent(e.target.value)} placeholder="<p>Your article content...</p>" style={{ minHeight: 300 }} />
-              <p className="text-[0.6rem] text-muted mt-1">{content.length.toLocaleString()} chars · {content.split(/\s+/).filter(Boolean).length.toLocaleString()} words</p>
+              <label className="block text-[0.62rem] font-bold tracking-widests uppercase text-muted mb-1">Full Article Content</label>
+              <p className="text-[0.63rem] text-muted mb-3">Format text with the toolbar below — it's pre-filled with this post's current content, ready to edit.</p>
+              <RichTextEditor value={content} onChange={setContent} placeholder="Write the article content…" minHeight={300} />
+              <p className="text-[0.6rem] text-muted mt-1">{content.replace(/<[^>]*>/g, '').length.toLocaleString()} chars · {content.replace(/<[^>]*>/g, ' ').split(/\s+/).filter(Boolean).length.toLocaleString()} words</p>
             </div>
           )}
 
