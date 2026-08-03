@@ -52,6 +52,16 @@
            focus:border-accent placeholder:text-muted;
   }
 
+  /* ── Rich text editor ── */
+  .rte-content:empty:before {
+    content: attr(data-placeholder);
+    color: theme('colors.muted', #8b8899);
+    pointer-events: none;
+  }
+  .rte-content h2 { @apply font-display font-bold text-lg text-white mt-3 mb-1.5; }
+  .rte-content blockquote { @apply border-l-2 border-accent pl-3 italic text-[#c9c7d4] my-2; }
+  .rte-content p { @apply mb-2; }
+
   /* ── Misc ── */
   .tag-chip {
     @apply inline-block px-2.5 py-0.5 rounded-full text-[0.6rem] font-semibold
