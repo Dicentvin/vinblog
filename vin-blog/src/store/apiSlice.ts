@@ -3,7 +3,7 @@
 // when VITE_API_URL is set to http://localhost:3001 in .env.local
 
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
-import type { Blog, Comment, BlogsResponse, AdminStats } from '../types';
+import type { Blog, Comment, BlogsResponse, AdminStats, ContentBlock } from '../types';
 
 // In production on Vercel: VITE_API_URL is empty → calls go to /api/...
 // In local dev: set VITE_API_URL=http://localhost:3001 in frontend/.env.local
@@ -19,20 +19,21 @@ export interface GetBlogsArgs {
 }
 
 export interface UpdateBlogArgs {
-  id:           string;
-  title?:       string;
-  description?: string;
-  content?:     string;
-  image?:       string;
-  imageFileId?: string;
-  category?:    string;
-  tags?:        string[];
-  authorName?:  string;
-  authorImage?: string;
-  authorBio?:   string;
-  minsRead?:    number;
-  featured?:    boolean;
-  status?:      'draft' | 'published';
+  id:             string;
+  title?:         string;
+  description?:   string;
+  content?:       string;
+  contentBlocks?: ContentBlock[];
+  image?:         string;
+  imageFileId?:   string;
+  category?:      string;
+  tags?:          string[];
+  authorName?:    string;
+  authorImage?:   string;
+  authorBio?:     string;
+  minsRead?:      number;
+  featured?:      boolean;
+  status?:        'draft' | 'published';
 }
 
 export interface CreateBlogPayload {
@@ -144,14 +145,14 @@ export const apiSlice = createApi({
     }),
 
     // ── AI assist ─────────────────────────────────────────────────────────────
-    aiAssist: builder.mutation<
+    aiAssist: builder.mutation
       { requestId: string; status: string; result?: string },
       { type: string; content?: string; title?: string }
     >({
       query: body => ({ url: '/api/ai/assist', method: 'POST', body }),
     }),
 
-    getAiResult: builder.query<
+    getAiResult: builder.query
       { id: string; status: string; result?: string; type: string },
       string
     >({
