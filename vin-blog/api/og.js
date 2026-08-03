@@ -2,9 +2,17 @@
 // Serves Open Graph meta tags for social media crawlers (WhatsApp, Facebook, Twitter)
 // Regular users get redirected to the blog post via hash URL
 
-const SITE_URL = process.env.VERCEL_URL
-  ? `https://${process.env.VERCEL_URL}`
-  : 'https://vinblog-q9oe.vercel.app';
+// IMPORTANT: do NOT build this from process.env.VERCEL_URL.
+// VERCEL_URL is always the unique, per-deployment hash URL
+// (e.g. drvincentblog-fe6lb89kr-....vercel.app) — even on a "production"
+// deploy — and those hash URLs are gated behind Vercel's Deployment
+// Protection. Social crawlers (WhatsApp, Facebook, etc.) can't authenticate,
+// so they were being served Vercel's own login/"Overview" page instead of
+// this site's OG tags, which is why link previews showed a blank Vercel
+// card. Always point at the stable public domain instead. If you ever
+// move to a different production domain, update this constant (or set
+// CANONICAL_SITE_URL in your Vercel env vars).
+const SITE_URL = process.env.CANONICAL_SITE_URL || 'https://vinblog-q9oe.vercel.app';
 
 const CRAWLERS = [
   'facebookexternalhit',
@@ -124,11 +132,7 @@ export default async function handler(req, res) {
 
   // ── Social media crawler → fetch blog and return OG HTML ─────────────────
   try {
-    const apiBase = process.env.VERCEL_URL
-      ? `https://${process.env.VERCEL_URL}`
-      : SITE_URL;
-
-    const response = await fetch(`${apiBase}/api/blogs/${id}`, {
+    const response = await fetch(`${SITE_URL}/api/blogs/${id}`, {
       headers: { 'Accept': 'application/json' },
     });
 
