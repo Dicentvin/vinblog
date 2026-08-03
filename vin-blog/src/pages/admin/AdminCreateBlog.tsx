@@ -1,7 +1,10 @@
-import { useState, type ChangeEvent, type FormEvent } from 'react';
-import { useCreateBlogMutation, useAiAssistMutation, useUploadImageMutation, useGetAiResultQuery } from '../../store/apiSlice';
-import { useNav, useAppSelector } from '../../hooks';
-import { selectEditBlogId } from '../../store/uiSlice';
+import { useState, useEffect, useRef, type ChangeEvent, type FormEvent } from 'react';
+import {
+  useCreateBlogMutation, useUpdateBlogMutation, useGetBlogByIdQuery,
+  useAiAssistMutation, useUploadImageMutation, useGetAiResultQuery,
+} from '../../store/apiSlice';
+import { useNav, useEditBlog } from '../../hooks';
+import RichTextEditor from '../../components/RichTextEditor';
 import type { ContentBlock, CreateBlogPayload, SeoResult } from '../../types';
 
 const CATS=['Fullstack','Politics','Gynaecologic Oncology','Self Development','Data Analysis','Business','Female Reproductive Health','AI & ML'] as const;
@@ -10,10 +13,16 @@ interface AiModal{type:string;result:string;}
 
 export default function AdminCreateBlog():JSX.Element{
   const {switchAdminPage}=useNav();
-  const editId=useAppSelector(selectEditBlogId);
-  const [createBlog,{isLoading:saving}]=useCreateBlogMutation();
+  const {editBlogId:editId,setEditBlogId}=useEditBlog();
+  const [createBlog,{isLoading:creating}]=useCreateBlogMutation();
+  const [updateBlog,{isLoading:updating}]=useUpdateBlogMutation();
+  const saving=creating||updating;
   const [aiAssist,{isLoading:aiLoading}]=useAiAssistMutation();
   const [uploadImage,{isLoading:uploading}]=useUploadImageMutation();
+
+  // When editing, fetch the existing post so the form isn't blank
+  const {data:existingBlog,isLoading:loadingBlog}=useGetBlogByIdQuery(editId??'',{skip:!editId});
+  const loadedIdRef=useRef<string|null>(null);
 
   const [title,setTitle]=useState('');
   const [desc,setDesc]=useState('');
@@ -29,6 +38,34 @@ export default function AdminCreateBlog():JSX.Element{
   const [aiModal,setAiModal]=useState<AiModal|null>(null);
   const [seoData,setSeoData]=useState<SeoResult|null>(null);
   const [aiRequestId,setAiRequestId]=useState<string|null>(null);
+
+  // Populate the form once the existing post loads (edit mode only) — this is
+  // what fixes the "edit page appears blank" issue: previously editId was
+  // read but never used to actually fetch + fill in the post's data.
+  useEffect(()=>{
+    if(!existingBlog||!editId||loadedIdRef.current===editId)return;
+    loadedIdRef.current=editId;
+    setTitle(existingBlog.title??'');
+    setDesc(existingBlog.description??'');
+    setCategory((existingBlog.category as BCat)??'');
+    setTags(existingBlog.tags??[]);
+    setAuthor(existingBlog.author?.name??existingBlog.authorName??'');
+    setMins(existingBlog.minsRead??5);
+    setStatus((existingBlog.status as 'draft'|'published')??'draft');
+    setCoverUrl(existingBlog.image??'');
+    setCoverFileId(existingBlog.imageFileId??'');
+    // Prefer the structured content blocks if we saved them; otherwise fall
+    // back to the flat HTML content string so there's always something to edit.
+    if(existingBlog.contentBlocks&&existingBlog.contentBlocks.length>0){
+      setBlocks(existingBlog.contentBlocks);
+    }else if(existingBlog.content){
+      setBlocks([{id:'b1',type:'text',content:existingBlog.content}]);
+    }
+  },[existingBlog,editId]);
+
+  // Leaving the page (Cancel/Save/unmount) should clear edit mode so a
+  // future "New Post" click doesn't accidentally reopen this post.
+  useEffect(()=>()=>{setEditBlogId(null);},[]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Poll for async AI result from Inngest
   const {data:aiPoll}=useGetAiResultQuery(aiRequestId??'',{skip:!aiRequestId,pollingInterval:1500});
@@ -84,7 +121,12 @@ export default function AdminCreateBlog():JSX.Element{
   const handleSave=async(e:FormEvent):Promise<void>=>{
     e.preventDefault();if(!title.trim()){alert('Please enter a title.');return;}
     const payload:CreateBlogPayload={title,description:desc,image:coverUrl,imageFileId:coverFileId,content:getContent(),contentBlocks:blocks,category:category||'Frontend',tags,authorName,minsRead,status};
-    try{await createBlog(payload).unwrap();alert(`"${title}" saved as ${status}!`);switchAdminPage('blogs');}
+    try{
+      if(editId){await updateBlog({id:editId,...payload}).unwrap();alert(`"${title}" updated!`);}
+      else{await createBlog(payload).unwrap();alert(`"${title}" saved as ${status}!`);}
+      setEditBlogId(null);
+      switchAdminPage('blogs');
+    }
     catch(err:unknown){const msg=err&&typeof err==='object'&&'data'in err?(err as{data?:{error?:string}}).data?.error??'Unknown':'Unknown';alert('Error: '+msg);}
   };
 
@@ -94,10 +136,11 @@ export default function AdminCreateBlog():JSX.Element{
         <div><p className="text-[0.62rem] text-muted tracking-widest uppercase mb-1.5">Content</p><h1 className="font-display font-bold text-2xl sm:text-3xl text-white tracking-tight">{editId?'Edit Post':'Create New Post'}</h1></div>
         <div className="flex gap-2 flex-wrap">
           <select value={status} onChange={e=>setStatus(e.target.value as'draft'|'published')} className="input-field w-36 text-sm"><option value="draft">Draft</option><option value="published">Published</option></select>
-          <button onClick={()=>switchAdminPage('blogs')} className="btn-ghost">Cancel</button>
-          <button onClick={e=>void handleSave(e)} disabled={saving} className="btn-primary disabled:opacity-60">{saving?'⏳ Saving…':status==='published'?'Publish →':'Save Draft'}</button>
+          <button onClick={()=>{setEditBlogId(null);switchAdminPage('blogs');}} className="btn-ghost">Cancel</button>
+          <button onClick={e=>void handleSave(e)} disabled={saving} className="btn-primary disabled:opacity-60">{saving?'⏳ Saving…':editId?'Update Post':status==='published'?'Publish →':'Save Draft'}</button>
         </div>
       </div>
+      {editId&&loadingBlog&&<p className="text-xs text-muted mb-4">⏳ Loading post…</p>}
 
       <form onSubmit={e=>void handleSave(e)} className="grid grid-cols-1 xl:grid-cols-[1fr_300px] gap-5">
         <div className="space-y-4">
@@ -151,7 +194,7 @@ export default function AdminCreateBlog():JSX.Element{
             <div className="space-y-3">
               {blocks.map(b=>b.type==='text'?(
                 <div key={b.id}>
-                  <textarea className="input-field resize-y text-sm leading-relaxed" rows={6} placeholder="Write content here…" value={b.content??''} onChange={e=>updateBlock(b.id,'content',e.target.value)}/>
+                  <RichTextEditor value={b.content??''} onChange={v=>updateBlock(b.id,'content',v)} placeholder="Write content here…" minHeight={160}/>
                   <div className="flex gap-2 mt-1.5 flex-wrap">
                     <button type="button" onClick={()=>addBlock('image',b.id)} className="text-xs text-muted border border-border px-2.5 py-1 rounded-md hover:border-accent hover:text-accent transition-all cursor-pointer bg-transparent font-body">+ Insert Image Below</button>
                     <button type="button" onClick={()=>removeBlock(b.id)} className="text-xs text-red-400 bg-transparent border-0 cursor-pointer font-body hover:text-red-300">✕ Remove</button>
