@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type FocusEvent } from 'react';
+import { useEffect, useRef, useState, type ClipboardEvent, type FocusEvent } from 'react';
 
 interface Props {
   value:        string;
@@ -14,6 +14,32 @@ const FONTS = [
   { label: 'Monospace',  value: '"Courier New", monospace' },
   { label: 'Rounded',    value: '"Trebuchet MS", sans-serif' },
 ];
+
+
+// ── HTML helpers ─────────────────────────────────────────────────────────────
+// Strip anything that can run script before we ever put HTML into the page.
+function sanitizeHtml(html: string): string {
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+  doc.querySelectorAll('script,style,iframe,object,embed,link,meta').forEach(n => n.remove());
+  doc.querySelectorAll('*').forEach(el => {
+    Array.from(el.attributes).forEach(a => {
+      const n = a.name.toLowerCase();
+      if (n.startsWith('on') || ((n === 'href' || n === 'src') && /^\s*javascript:/i.test(a.value))) {
+        el.removeAttribute(a.name);
+      }
+    });
+  });
+  return doc.body.innerHTML;
+}
+
+// Plain text that is really HTML source, e.g. "<p>Hello</p><h2>Title</h2>"
+const HTML_SOURCE_RE = /^\s*<(p|h[1-6]|ul|ol|div|blockquote|section|article|img|table)[\s>/]/i;
+// Content that was saved earlier with the tags escaped, e.g. "&lt;p&gt;Hello&lt;/p&gt;"
+const ESCAPED_HTML_RE = /&lt;\/?(p|h[1-6]|ul|ol|li|strong|em|div|blockquote|br)[\s&>]/i;
+
+function unescapeHtml(value: string): string {
+  return new DOMParser().parseFromString(value, 'text/html').body.textContent ?? '';
+}
 
 const SIZES = ['1', '2', '3', '4', '5', '6', '7']; // execCommand fontSize scale
 
@@ -34,7 +60,17 @@ export default function RichTextEditor({ value, onChange, placeholder, minHeight
   // (e.g. when opening the Edit modal / edit page for a post that already
   // has content) — without clobbering the user's cursor while they type.
   useEffect(() => {
-    if (ref.current && ref.current.innerHTML !== value) {
+    if (!ref.current) return;
+    // Repair posts that were saved with visible tags (pasted HTML used to be
+    // stored as escaped text). Fix once, then push the repaired HTML upward
+    // so the next Save stores real markup.
+    if (ESCAPED_HTML_RE.test(value)) {
+      const fixed = sanitizeHtml(unescapeHtml(value));
+      ref.current.innerHTML = fixed;
+      onChange(fixed);
+      return;
+    }
+    if (ref.current.innerHTML !== value) {
       ref.current.innerHTML = value || '';
     }
     // Only re-sync when the *external* value changes, not on every keystroke.
@@ -66,6 +102,16 @@ export default function RichTextEditor({ value, onChange, placeholder, minHeight
     const next = String(Math.min(7, Math.max(1, Number(fontSize) + dir)));
     setFontSize(next);
     run('fontSize', next);
+  };
+
+  // Pasting HTML source (e.g. "<p>Hello</p>") should produce formatted content,
+  // not literal tags. Anything else pastes normally.
+  const handlePaste = (e: ClipboardEvent<HTMLDivElement>): void => {
+    const text = e.clipboardData.getData('text/plain');
+    if (!HTML_SOURCE_RE.test(text)) return;
+    e.preventDefault();
+    exec('insertHTML', sanitizeHtml(text));
+    handleInput();
   };
 
   const handleBlur = (_e: FocusEvent<HTMLDivElement>): void => {
@@ -153,6 +199,7 @@ export default function RichTextEditor({ value, onChange, placeholder, minHeight
         contentEditable
         suppressContentEditableWarning
         onInput={handleInput}
+        onPaste={handlePaste}
         onBlur={handleBlur}
         onKeyUp={syncActiveStates}
         onMouseUp={syncActiveStates}
