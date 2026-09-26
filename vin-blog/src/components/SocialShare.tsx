@@ -7,7 +7,7 @@ interface Props {
   image?:       string;
 }
 
-const MY_EMAIL   = 'dr.vincent@skylimits.dev';
+const MY_EMAIL   = 'dr.chukwudivincent79@gmail.com';
 const MY_TWITTER = 'drvincent';
 
 // Always use the stable, public production domain — never
@@ -18,7 +18,7 @@ const MY_TWITTER = 'drvincent';
 // WhatsApp/Facebook's crawler can't get past the login wall and shows a
 // broken "Overview - Vercel" preview instead of the blog post. This
 // constant should match CANONICAL_SITE_URL used in api/og.js.
-const SITE_URL = (import.meta.env.VITE_SITE_URL as string | undefined) || 'https://vinblog-q9oe.vercel.app';
+const SITE_URL = (import.meta.env.VITE_SITE_URL as string | undefined) || 'https://drvincent.vercel.app';
 
 export default function SocialShare({ title, blogId, description, image }: Props): JSX.Element {
   const [copied, setCopied] = useState(false);
@@ -109,7 +109,7 @@ export default function SocialShare({ title, blogId, description, image }: Props
           <img src={image} alt={title} className="w-full h-36 object-cover" />
           <div className="p-3">
             <p className="text-[0.58rem] font-bold tracking-widest uppercase text-accent mb-1">
-              vinblog-q9oe.vercel.app
+              {SITE_URL.replace(/^https?:\/\//, '')}
             </p>
             <p className="text-xs font-semibold text-white leading-snug line-clamp-2 mb-1">{title}</p>
             {description && (
