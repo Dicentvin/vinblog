@@ -12,7 +12,7 @@
 // card. Always point at the stable public domain instead. If you ever
 // move to a different production domain, update this constant (or set
 // CANONICAL_SITE_URL in your Vercel env vars).
-const SITE_URL = process.env.CANONICAL_SITE_URL || 'https://vinblog-q9oe.vercel.app';
+const SITE_URL = process.env.CANONICAL_SITE_URL || 'https://drvincent.vercel.app';
 
 const CRAWLERS = [
   'facebookexternalhit',
