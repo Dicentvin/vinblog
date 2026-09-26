@@ -88,14 +88,16 @@ function buildPage({ title, description, image, pageUrl, redirectUrl }) {
   <meta name="twitter:image"       content="${im}" />
   <meta name="twitter:image:alt"   content="${t}" />
 
-  <!-- ── Redirect humans to the SPA ───────────────────────────────── -->
-  <meta http-equiv="refresh" content="0;url=${ru}" />
+  <!-- No auto-refresh here: regular visitors already get a plain 302
+       redirect before ever reaching this HTML (see handler below), and
+       crawlers should read these OG tags as-is rather than being sent
+       on to the hash-routed SPA shell, which has no per-post meta tags. -->
   <link rel="canonical" href="${pu}" />
 </head>
 <body style="background:#0a0a0f;color:#e8e6f0;font-family:sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0">
   <div style="text-align:center;padding:2rem">
-    <p style="font-size:1.1rem;margin-bottom:1rem">Redirecting to article…</p>
-    <a href="${ru}" style="color:#d4af37;font-size:0.9rem">Click here if not redirected</a>
+    <p style="font-size:1.1rem;margin-bottom:1rem">SkyLimits</p>
+    <a href="${ru}" style="color:#d4af37;font-size:0.9rem">Read the article</a>
   </div>
 </body>
 </html>`;
