@@ -150,8 +150,14 @@ export default async function handler(req, res) {
     image = image.replace(/^http:\/\//, 'https://');
 
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
-    // Cache 10 minutes so repeated shares don't hammer the DB
-    res.setHeader('Cache-Control', 'public, s-maxage=600, stale-while-revalidate=60');
+    // Some crawlers send a Range header; without this, Vercel's edge cache
+    // can honor it and slice this HTML into a 206 partial response, which
+    // can truncate the document before later <meta> tags (e.g. og:image)
+    // are ever seen by the crawler.
+    res.setHeader('Accept-Ranges', 'none');
+    // Cache 10 minutes so repeated shares don't hammer the DB. no-transform
+    // stops intermediate caches/proxies from altering or re-chunking the body.
+    res.setHeader('Cache-Control', 'public, s-maxage=600, stale-while-revalidate=60, no-transform');
 
     return res.status(200).send(buildPage({
       title:       blog.title,
